@@ -5,11 +5,13 @@ import { PetalRadar } from './components/PetalRadar'
 import { GoalTracker } from './components/GoalTracker'
 
 import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 
 // Inner component to access context
 const DashboardContent = () => {
   const { projects } = useData();
   const [activeSector, setActiveSector] = useState<string>("All Sectors");
+  const [hoveredProject, setHoveredProject] = useState<string | null>(null);
 
   const sectors = useMemo(() => {
     // Get unique sectors, filter out "Unknown Sector" if desired or keep it
@@ -30,6 +32,19 @@ const DashboardContent = () => {
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
+
   return (
     <DashboardLayout>
       {/* Sector Tabs */}
@@ -39,9 +54,9 @@ const DashboardContent = () => {
             key={sector}
             onClick={() => setActiveSector(sector)}
             className={`
-              px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all
+              px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300
               ${activeSector === sector
-                ? 'bg-white text-black shadow-lg shadow-white/10'
+                ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105'
                 : 'bg-[#1e1e1e] text-gray-400 hover:text-white hover:bg-[#252525] border border-white/5'
               }
             `}
@@ -51,73 +66,109 @@ const DashboardContent = () => {
         ))}
       </div>
 
-      {/* Top Row: Counters & Goals */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="p-6 rounded-2xl bg-[#1e1e1e] border border-white/5 flex flex-col justify-center">
-          <h3 className="text-gray-400 mb-2 font-medium">Total Eligible</h3>
-          <p className="text-5xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-            {filteredProjects.filter(p => p.isEligible).length}
-          </p>
-          <p className="text-xs text-gray-500 mt-2">Projects Tracking</p>
+      <motion.div
+        key={activeSector}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Top Row: Counters & Goals */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-[#1e1e1e]/80 backdrop-blur-sm border border-white/5 flex flex-col justify-center hover:border-white/20 transition-colors">
+            <h3 className="text-gray-400 mb-2 font-medium">Total Eligible</h3>
+            <div className="flex items-baseline gap-2">
+              <p className="text-5xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                {filteredProjects.filter(p => p.isEligible).length}
+              </p>
+              <span className="text-xs text-gray-500 uppercase tracking-wider">Projects</span>
+            </div>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <GoalTracker projects={filteredProjects} type="eui" />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <GoalTracker projects={filteredProjects} type="water" />
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-[#1e1e1e]/80 backdrop-blur-sm border border-white/5 flex flex-col justify-center hover:border-white/20 transition-colors">
+            <h3 className="text-gray-400 mb-2 font-medium">Switch List Vetted</h3>
+            <p className="text-5xl font-bold text-teal-400">
+              {filteredProjects.filter(p => p.health.switchListVetted).length}
+            </p>
+            <p className="text-xs text-teal-400/50 mt-2 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+              Verified Healthy
+            </p>
+          </motion.div>
         </div>
 
-        <GoalTracker projects={filteredProjects} type="eui" />
-        <GoalTracker projects={filteredProjects} type="water" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Radar Chart */}
+          <motion.div variants={itemVariants} className="lg:col-span-1">
+            <PetalRadar projects={filteredProjects} />
+          </motion.div>
 
-        <div className="p-6 rounded-2xl bg-[#1e1e1e] border border-white/5 flex flex-col justify-center">
-          <h3 className="text-gray-400 mb-2 font-medium">Switch List Vetted</h3>
-          <p className="text-5xl font-bold text-teal-400">
-            {filteredProjects.filter(p => p.health.switchListVetted).length}
-          </p>
-          <p className="text-xs text-gray-500 mt-2">Projects Compliant</p>
-        </div>
-      </div>
+          {/* Detailed List */}
+          <motion.div variants={itemVariants} className="lg:col-span-2 p-6 rounded-2xl bg-[#1e1e1e]/80 backdrop-blur-sm border border-white/5 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-200 to-teal-200 bg-clip-text text-transparent">Project Details</h3>
+              <span className="text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+                {filteredProjects.length} Active Projects
+              </span>
+            </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Radar Chart - Takes up 1/3 or 1/2 */}
-        <div className="lg:col-span-1">
-          <PetalRadar projects={filteredProjects} />
-        </div>
-
-        {/* Detailed List */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-[#1e1e1e] border border-white/5 flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Detailed Project List</h3>
-            <span className="text-xs text-xs text-gray-500 bg-white/5 px-2 py-1 rounded">
-              Showing {filteredProjects.length} projects
-            </span>
-          </div>
-
-          <div className="overflow-x-auto flex-1 h-[320px]">
-            <table className="w-full text-left text-sm text-gray-400 border-collapse">
-              <thead className="text-xs uppercase bg-white/5 text-gray-200 sticky top-0 backdrop-blur-md z-10">
-                <tr>
-                  <th className="px-4 py-3 rounded-tl-lg bg-[#252525]">Project Name</th>
-                  <th className="px-4 py-3 bg-[#252525]">Sector</th>
-                  <th className="px-4 py-3 bg-[#252525]">Phase</th>
-                  <th className="px-4 py-3 text-center bg-[#252525]">Eligible?</th>
-                  <th className="px-4 py-3 text-right bg-[#252525]">EUI Red.</th>
-                  <th className="px-4 py-3 text-right rounded-tr-lg bg-[#252525]">Water Red.</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredProjects.slice(0, 100).map((p) => (
-                  <tr key={p.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-4 py-2 font-medium text-white group-hover:text-blue-400 transition-colors truncate max-w-[200px]">{p.name}</td>
-                    <td className="px-4 py-2 opacity-80">{p.sector}</td>
-                    <td className="px-4 py-2 opacity-80">{p.phase}</td>
-                    <td className="px-4 py-2 text-center">
-                      <span className={`w-2 h-2 rounded-full inline-block ${p.isEligible ? 'bg-green-500' : 'bg-gray-700'}`}></span>
-                    </td>
-                    <td className="px-4 py-2 text-right font-mono text-white">{(p.resilience.euiReduction * 100).toFixed(0)}%</td>
-                    <td className="px-4 py-2 text-right font-mono text-white">{(p.resilience.indoorWaterReduction * 100).toFixed(0)}%</td>
+            <div className="overflow-x-auto flex-1 h-[400px] scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20">
+              <table className="w-full text-left text-sm text-gray-400 border-collapse">
+                <thead className="text-xs uppercase bg-[#1a1a1a]/90 text-gray-200 sticky top-0 backdrop-blur-md z-10 shadow-sm">
+                  <tr>
+                    <th className="px-5 py-4 rounded-tl-lg">Project Name</th>
+                    <th className="px-5 py-4">Sector</th>
+                    <th className="px-5 py-4">Phase</th>
+                    <th className="px-5 py-4 text-center">Eligible?</th>
+                    <th className="px-5 py-4 text-right">EUI Red.</th>
+                    <th className="px-5 py-4 text-right rounded-tr-lg">Water Red.</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredProjects.slice(0, 100).map((p, i) => (
+                    <motion.tr
+                      key={p.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      onMouseEnter={() => setHoveredProject(p.id)}
+                      onMouseLeave={() => setHoveredProject(null)}
+                      className={`
+                                        transition-all duration-200 cursor-default
+                                        ${hoveredProject === p.id ? 'bg-white/10 scale-[1.01] shadow-lg' : 'hover:bg-white/5'}
+                                    `}
+                    >
+                      <td className="px-5 py-3 font-medium text-white transition-colors truncate max-w-[200px] border-l-4 border-transparent hover:border-blue-400">
+                        {p.name}
+                      </td>
+                      <td className="px-5 py-3 opacity-80">{p.sector}</td>
+                      <td className="px-5 py-3 opacity-80">
+                        <span className="px-2 py-1 rounded-md bg-white/5 text-xs">{p.phase}</span>
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        <span className={`
+                                            inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold
+                                            ${p.isEligible ? 'bg-green-500/20 text-green-400' : 'bg-gray-700/50 text-gray-500'}
+                                        `}>
+                          {p.isEligible ? 'Y' : 'N'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right font-mono text-white">{(p.resilience.euiReduction * 100).toFixed(0)}%</td>
+                      <td className="px-5 py-3 text-right font-mono text-white">{(p.resilience.indoorWaterReduction * 100).toFixed(0)}%</td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </DashboardLayout>
   )
 }

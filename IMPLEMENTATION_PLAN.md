@@ -31,9 +31,9 @@
 
 ## Phase 5: Dashboard Assembly
 **Objective:** Integrate components into the final views.
-- [ ] **Overview Tab:** Assemble the "Petals" view (Radar + Headline Counters).
-- [ ] **Sector Tab:** Implement the interactive filtering system to slice data by "Education", "Healthcare", etc.
-- [ ] **Detail View:** Implement the `ProjectTable` with sorting and searching capabilities.
+- [x] **Overview Tab:** Assemble the "Petals" view (Radar + Headline Counters).
+- [x] **Sector Tab:** Implement the interactive filtering system to slice data by "Education", "Healthcare", etc.
+- [x] **Detail View:** Implement the `ProjectTable` with sorting and searching capabilities.
 
 ## Phase 6: Polish & "Wow" Factor
 **Objective:** Ensure the application feels premium.
