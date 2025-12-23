@@ -4,6 +4,7 @@ export interface ProjectMetrics {
     name: string;
     sector: string;
     isEligible: boolean;
+    eligibilityStatus: string;
     phase: string; // Added Phase as it is mentioned in key features (Data Detail List)
 
     // Petal: Resilience & Regeneration

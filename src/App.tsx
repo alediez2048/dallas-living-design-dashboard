@@ -9,33 +9,25 @@ import { motion } from 'framer-motion';
 
 // Inner component to access context
 const DashboardContent = () => {
-  const { projects } = useData();
+  const { projects, logs } = useData();
   const [activeSector, setActiveSector] = useState<string>("All Sectors");
   const [hoveredProject, setHoveredProject] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   // Define the explicit tabs request
   const TABS = [
     { id: "All Sectors", label: "Studio Overview" },
-    { id: "Education", label: "Education (All)" },
-    { id: "K-12", label: "K-12" },
-    { id: "Higher Education", label: "Higher Ed" },
-    { id: "Healthcare", label: "Healthcare" },
+    { id: "K12", label: "K12" },
+    { id: "Higher ED", label: "Higher ED" },
     { id: "CCC", label: "CCC" },
-    { id: "Workplace Interiors", label: "Workplace" },
-    { id: "Science & Tech", label: "Science & Tech" }
+    { id: "Healthcare DIV", label: "Healthcare DIV" },
+    { id: "Diversified Healthcare Interiors", label: "Diversified Healthcare Interiors" },
+    { id: "Healthcare HCA", label: "Healthcare HCA" },
+    { id: "Workplace", label: "Workplace" }
   ];
 
   const filteredProjects = useMemo(() => {
     if (activeSector === "All Sectors") return projects;
-
-    if (activeSector === "Education") {
-      return projects.filter(p =>
-        p.sector === "Education" ||
-        p.sector === "K-12" ||
-        p.sector === "Higher Education"
-      );
-    }
-
     return projects.filter(p => p.sector === activeSector);
   }, [projects, activeSector]);
 
@@ -88,7 +80,17 @@ const DashboardContent = () => {
         animate="visible"
       >
         {/* Top Row: Counters & Goals */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+          <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none">
+            <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Total Projects</h3>
+            <div className="flex items-baseline gap-2">
+              <p className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-200 bg-clip-text text-transparent">
+                {filteredProjects.length}
+              </p>
+              <span className="text-xs text-gray-500 uppercase tracking-wider">All</span>
+            </div>
+          </motion.div>
+
           <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none">
             <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Total Eligible</h3>
             <div className="flex items-baseline gap-2">
@@ -167,12 +169,29 @@ const DashboardContent = () => {
                         <span className="px-2 py-1 rounded-md bg-gray-100 dark:bg-white/5 text-xs">{p.phase}</span>
                       </td>
                       <td className="px-5 py-3 text-center">
-                        <span className={`
-                                            inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold
-                                            ${p.isEligible ? 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700/50 text-gray-500'}
-                                        `}>
-                          {p.isEligible ? 'Y' : 'N'}
-                        </span>
+                        {(() => {
+                          const status = p.eligibilityStatus || (p.isEligible ? "Yes" : "No");
+
+                          let colorClass = "bg-gray-100 dark:bg-gray-700/50 text-gray-500";
+                          let text = "N";
+
+                          if (status === "Yes") {
+                            colorClass = "bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400";
+                            text = "Y";
+                          } else if (status === "TBD") {
+                            colorClass = "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 w-auto px-2";
+                            text = "TBD";
+                          } else if (status === "No 2026") {
+                            colorClass = "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 w-auto px-2";
+                            text = "2026";
+                          }
+
+                          return (
+                            <span className={`inline-flex items-center justify-center min-w-[1.5rem] h-6 rounded-full text-[10px] font-bold ${colorClass}`}>
+                              {text}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">{(p.resilience.euiReduction * 100).toFixed(0)}%</td>
                       <td className="px-5 py-3 text-right font-mono text-gray-900 dark:text-white">{(p.resilience.indoorWaterReduction * 100).toFixed(0)}%</td>
@@ -184,6 +203,28 @@ const DashboardContent = () => {
           </motion.div>
         </div>
       </motion.div>
+      <div className="fixed bottom-4 right-4 z-50">
+        <button
+          onClick={() => setShowDebug(!showDebug)}
+          className="bg-gray-800 text-white px-3 py-1 rounded-full text-xs opacity-50 hover:opacity-100"
+        >
+          {showDebug ? 'Hide Debug' : 'Debug Parser'}
+        </button>
+      </div>
+
+      {showDebug && (
+        <div className="fixed bottom-0 left-0 right-0 h-64 bg-black/90 text-green-400 font-mono text-xs p-4 overflow-auto z-40 border-t border-gray-700 backdrop-blur-md">
+          <h3 className="font-bold mb-2 text-white sticky top-0 bg-black/90 p-1">Parser Logs</h3>
+          {logs.length === 0 ? (
+            <div className="text-gray-500">No logs available. Upload a file to see parsing details.</div>
+          ) : (
+            logs.map((log, i) => (
+              <div key={i} className="whitespace-pre-wrap border-b border-gray-800 py-0.5">{log}</div>
+            ))
+          )}
+        </div>
+      )}
+
     </DashboardLayout>
   )
 }

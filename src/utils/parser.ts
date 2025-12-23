@@ -8,9 +8,11 @@ type RawRow = (string | number | null)[];
  * Parses the raw Excel file buffer into structured ProjectMetrics objects.
  * Handles the specific multi-row header format of the Dallas Living Design Dashboard.
  */
-export const parseProjectData = async (file: File): Promise<ProjectMetrics[]> => {
+export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics[], logs: string[] }> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
+        const logs: string[] = [];
+        logs.push(`Parsing file: ${file.name}`);
 
         reader.onload = (e) => {
             try {
@@ -21,6 +23,7 @@ export const parseProjectData = async (file: File): Promise<ProjectMetrics[]> =>
 
                 // Convert to JSON array of arrays (treating all cells as raw values)
                 const rawData = XLSX.utils.sheet_to_json<RawRow>(worksheet, { header: 1, defval: null });
+                logs.push(`Sheet found: ${firstSheetName}, total rows: ${rawData.length}`);
 
                 // Identify Header Rows
                 // Row 6 (Index 5): Main Headers ("PROJECT NAME", "Phase", "Switch List Vetted")
@@ -47,6 +50,11 @@ export const parseProjectData = async (file: File): Promise<ProjectMetrics[]> =>
                 const projNumIdx = findColIndex(mainHeaderRow, "PROJECT #");
                 const eligibleIdx = findColIndex(mainHeaderRow, "Eligible for reporting?");
                 const phaseIdx = findColIndex(mainHeaderRow, "Phase");
+
+                logs.push(`Column Mapping: Name=${nameIdx}, Proj#=${projNumIdx}, Eligible=${eligibleIdx}`);
+                if (nameIdx === -1 || projNumIdx === -1) {
+                    logs.push("CRITICAL WARNING: Name or Project Number column not found!");
+                }
 
                 // --- Resilience & Regeneration ---
                 // EUI: Look for "Predicted Net EUI" in sub-header row (Row 7)
@@ -89,39 +97,86 @@ export const parseProjectData = async (file: File): Promise<ProjectMetrics[]> =>
                     // Skip empty rows
                     if (!row || row.length === 0) continue;
 
-                    // CHECK SECTOR: Check both Name and Project # columns for Sector headers
+                    // CHECK SECTOR: Check Name, Project #, and Column 0 for Sector headers
                     // The Excel file often puts sector headers in the first columns
                     const markerA = String(row[nameIdx] || "").trim().toUpperCase();
                     const markerB = String(row[projNumIdx] || "").trim().toUpperCase();
+                    const markerC = String(row[0] || "").trim().toUpperCase();
 
                     // Helper to detect and normalize sector
                     const detectSector = (str: string): string | null => {
-                        if (str.includes("EDUCATION")) return "Education";
-                        if (str.includes("K12") || str.includes("K-12")) return "K-12";
-                        if (str.includes("HIGHER ED")) return "Higher Education";
-                        if (str.includes("HEALTHCARE") || str.includes("HEALTH CARE")) return "Healthcare";
-                        if (str.includes("CORPORATE") || str.includes("WORKPLACE")) return "Workplace Interiors";
-                        if (str.includes("CCC") || str.includes("CIVIC")) return "CCC";
-                        if (str.includes("SCIENCE") || str.includes("S&T")) return "Science & Tech";
+                        const s = str.toUpperCase();
+
+                        // Education
+                        if (s.includes("K12") || s.includes("K-12") || s.includes("SCHOOL")) return "K12";
+                        if (s.includes("HIGHER ED") || s.includes("HIGHER EDU") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC")) return "Higher ED";
+
+                        // Healthcare (Specifics first)
+                        // CRITICAL: Order matters. Check specific substrings before generic fallback.
+                        if (s.includes("DIVERSIFIED") || s.includes("DIV")) return "Diversified Healthcare Interiors"; // Catch "Diversified" or "Div" explicitly
+                        if (s.includes("HCA")) return "Healthcare HCA";
+                        if (s.includes("HEALTHCARE") || s.includes("HEALTH CARE") || s.includes("HEALTH")) return "Healthcare DIV"; // Default for generic "Health" is DIV
+
+                        // CCC
+                        if (s.includes("CCC") || s.includes("CIVIC") || s.includes("CULTURAL") || s.includes("COMMUNITY") || s.includes("MUSEUM") || s.includes("LIBRARY") || s.includes("PUBLIC")) return "CCC";
+
+                        // Workplace
+                        if (s.includes("WORKPLACE") || s.includes("CORPORATE") || s.includes("COMMERCIAL") || s.includes("OFFICE") || s.includes("INTERIORS") || s.includes("STUDIO")) return "Workplace";
+
+                        // Science & Tech (Preserve detection to avoid row-carryover errors)
+                        if (s.includes("SCIENCE") || s.includes("S&T")) return "Science & Tech";
+
                         return null;
                     };
 
-                    const sectorFromA = detectSector(markerA);
-                    const sectorFromB = detectSector(markerB);
+                    // Helper to detect numeric Project ID (starts with digit, min length 4)
+                    // CRITICAL FIX: Ensure it is NOT a header row. Headers often have empty names or only 1 column populated.
+                    // A valid project row must have:
+                    // 1. A Project ID that looks numeric (or alphanumeric start) and is long enough.
+                    // 2. A Project Name present in the name column.
+                    const rawProjNum = String(row[projNumIdx] || "").trim();
+                    const nameForCheck = String(row[nameIdx] || "").trim();
+                    const isProjectRow = (/^[0-9]/.test(rawProjNum) && rawProjNum.length >= 4) && nameForCheck.length > 0;
 
-                    if (sectorFromA) {
-                        currentSector = sectorFromA;
-                        continue;
+                    // Debug Logging for "Tricky" rows
+                    if (!isProjectRow && (markerA.length > 0 || markerC.length > 0)) {
+                        logs.push(`Row ${i} Check: Proj#="${rawProjNum}", Name="${nameForCheck}". IsProject=${isProjectRow}. Markers: A="${markerA}", C="${markerC}"`);
                     }
-                    if (sectorFromB) {
-                        currentSector = sectorFromB;
-                        continue;
+
+                    if (!isProjectRow) {
+                        const sectorFromA = detectSector(markerA);
+                        const sectorFromB = detectSector(markerB);
+                        const sectorFromC = detectSector(markerC);
+
+                        if (sectorFromA) {
+                            currentSector = sectorFromA;
+                            logs.push(`Row ${i}: Switch Sector (Col A) -> ${currentSector}`);
+                            continue;
+                        }
+                        if (sectorFromB) {
+                            currentSector = sectorFromB;
+                            logs.push(`Row ${i}: Switch Sector (Col B) -> ${currentSector}`);
+                            continue;
+                        }
+                        if (sectorFromC) {
+                            currentSector = sectorFromC;
+                            logs.push(`Row ${i}: Switch Sector (Col C) -> ${currentSector}`);
+                            continue;
+                        }
                     }
 
                     // 2. Filter valid projects
                     // Must have a name and not be a sub-header row
                     // Also ensure it's not just a purely numeric row or unrelated text
                     if (!row[nameIdx] || row[nameIdx] === "PROJECT NAME") continue;
+
+                    if (!isProjectRow) {
+                        if (markerA.length > 0 || markerC.length > 0) {
+                            logs.push(`Row ${i} IGNORED: Not Project, Not Sector. Markers: "${markerA}" / "${markerC}"`);
+                        }
+                        continue;
+                    }
+
 
                     // Retrieve raw name for object creation
                     const rawName = row[nameIdx];
@@ -165,11 +220,31 @@ export const parseProjectData = async (file: File): Promise<ProjectMetrics[]> =>
                     const waterReduction = getNumber(row[indWaterRedIdx]); // If it's 0.45 it means 45%
 
 
+                    // Determine Eligibility Status
+                    const rawEligible = String(row[eligibleIdx] || "").trim();
+                    let eligibilityStatus = "No";
+                    const rawLower = rawEligible.toLowerCase();
+
+                    if (rawLower.startsWith("y") || rawLower.includes("yes")) {
+                        eligibilityStatus = "Yes";
+                    } else if (rawLower.includes("tbd")) {
+                        eligibilityStatus = "TBD";
+                    } else if (rawLower.includes("2026")) {
+                        eligibilityStatus = "No 2026";
+                    } else {
+                        eligibilityStatus = "No";
+                    }
+
+                    // isEligible boolean derives from status
+                    const isEligible = eligibilityStatus === "Yes";
+
+
                     const project: ProjectMetrics = {
                         id: `proj-${i}`,
                         name: String(rawName),
                         sector: currentSector,
-                        isEligible: String(row[eligibleIdx]).toLowerCase().includes('yes') || String(row[eligibleIdx]).toLowerCase().includes('eligible'),
+                        isEligible,
+                        eligibilityStatus,
                         phase: String(row[phaseIdx] || "Unknown"),
 
                         resilience: {
@@ -197,7 +272,7 @@ export const parseProjectData = async (file: File): Promise<ProjectMetrics[]> =>
                     parsedProjects.push(project);
                 }
 
-                resolve(parsedProjects);
+                resolve({ projects: parsedProjects, logs });
 
             } catch (err) {
                 reject(err);

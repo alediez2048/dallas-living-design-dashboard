@@ -40,6 +40,7 @@
 - [x] **Aesthetics:** Apply glassmorphism effects, smooth gradients, and tasteful box shadows.
 - [x] **Interactivity:** Add hover effects to chart elements and smooth transitions between tabs.
 - [x] **Responsive Check:** Ensure layout works on smaller laptop screens (13").
+- [x] **Theming:** Implement Dark/Light mode toggle with persistence.
 
 ## Phase 7: Deployment & Handoff
 - [ ] **Build:** Run production build optimization.
