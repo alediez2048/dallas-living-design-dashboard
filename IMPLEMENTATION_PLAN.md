@@ -43,5 +43,5 @@
 - [x] **Theming:** Implement Dark/Light mode toggle with persistence.
 
 ## Phase 7: Deployment & Handoff
-- [ ] **Build:** Run production build optimization.
-- [ ] **Documentation:** Finalize README with specific instructions on how to structure the input CSV/Excel file for future use.
+- [x] **Build:** Run production build optimization.
+- [x] **Documentation:** Finalize README with specific instructions on how to structure the input CSV/Excel file for future use.

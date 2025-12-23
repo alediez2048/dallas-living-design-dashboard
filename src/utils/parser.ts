@@ -26,13 +26,13 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 logs.push(`Sheet found: ${firstSheetName}, total rows: ${rawData.length}`);
 
                 // Identify Header Rows
-                // Row 6 (Index 5): Main Headers ("PROJECT NAME", "Phase", "Switch List Vetted")
-                // Row 7 (Index 6): Sub Headers ("Predicted Net EUI", "% of reduction")
-                const mainHeaderRow = rawData[5];
-                const subHeaderRow = rawData[6];
+                // Row 2 (Index 1): Main Headers ("PROJECT NAME", "Phase", "Switch List Vetted")
+                // Row 3 (Index 2): Sub Headers ("Predicted Net EUI", "% of reduction")
+                const mainHeaderRow = rawData[1];
+                const subHeaderRow = rawData[2];
 
                 if (!mainHeaderRow || !subHeaderRow) {
-                    reject(new Error("Could not find header rows (Row 6 and 7) in the Excel file."));
+                    reject(new Error("Could not find header rows (Row 2 and 3) in the Excel file."));
                     return;
                 }
 
@@ -50,34 +50,38 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 const projNumIdx = findColIndex(mainHeaderRow, "PROJECT #");
                 const eligibleIdx = findColIndex(mainHeaderRow, "Eligible for reporting?");
                 const phaseIdx = findColIndex(mainHeaderRow, "Phase");
+                const sectorIdx = findColIndex(mainHeaderRow, "Sector");
 
-                logs.push(`Column Mapping: Name=${nameIdx}, Proj#=${projNumIdx}, Eligible=${eligibleIdx}`);
+                logs.push(`Column Mapping: Name=${nameIdx}, Proj#=${projNumIdx}, Eligible=${eligibleIdx}, Sector=${sectorIdx}`);
                 if (nameIdx === -1 || projNumIdx === -1) {
                     logs.push("CRITICAL WARNING: Name or Project Number column not found!");
                 }
+                if (sectorIdx === -1) {
+                    logs.push("WARNING: Sector column not found. Will use fallback detection from project names.");
+                }
 
                 // --- Resilience & Regeneration ---
-                // EUI: Look for "Predicted Net EUI" in sub-header row (Row 7)
-                // Note: The EUI section in Row 6 is "Operational Energy..."
+                // EUI: Look for "Predicted Net EUI" in sub-header row (Row 3)
+                // Note: The EUI section in Row 2 is "Operational Energy..."
                 const predictedEuiIdx = findColIndex(subHeaderRow, "Predicted Net EUI");
                 const baselineEuiIdx = findColIndex(subHeaderRow, "AIA Baseline EUI");
 
                 // Carbon
-                // "Operational Carbon" is in Row 6
+                // "Operational Carbon" is in Row 2
                 const opCarbonIdx = findColIndex(mainHeaderRow, "Operational Carbon");
-                // "Embodied Carbon" is in Row 6
+                // "Embodied Carbon" is in Row 2
                 const embodiedCarbonIdx = findColIndex(mainHeaderRow, "Embodied Carbon");
 
                 // Water
-                // "Water - Indoor" is in Row 6
-                // "Ttl Flow: Potable Water Use Reduction" is in Row 7 under that section
+                // "Water - Indoor" is in Row 2
+                // "Ttl Flow: Potable Water Use Reduction" is in Row 3 under that section
                 const indWaterRedIdx = findColIndex(subHeaderRow, "Ttl Flow: Potable Water Use Reduction");
 
-                // Ecology & Resilience Scores (Row 6)
+                // Ecology & Resilience Scores (Row 2)
                 const ecologyIdx = findColIndex(mainHeaderRow, "Ecology");
                 const resilienceIdx = findColIndex(mainHeaderRow, "Resilience - 1~3");
 
-                // --- Health & Well-being (Row 6) ---
+                // --- Health & Well-being (Row 2) ---
                 const switchListIdx = findColIndex(mainHeaderRow, "Switch List Vetted");
                 const airIdx = findColIndex(mainHeaderRow, "Air");
                 const lightIdx = findColIndex(mainHeaderRow, "Light"); // "Light - 2 Total Questions"
@@ -90,8 +94,8 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 const parsedProjects: ProjectMetrics[] = [];
                 let currentSector = "Unknown Sector";
 
-                // --- Iterate Data Rows (Starting from Row 9 / Index 8) ---
-                for (let i = 8; i < rawData.length; i++) {
+                // --- Iterate Data Rows (Starting from Row 6 / Index 5) ---
+                for (let i = 5; i < rawData.length; i++) {
                     const row = rawData[i];
 
                     // Skip empty rows
@@ -103,7 +107,45 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                     const markerB = String(row[projNumIdx] || "").trim().toUpperCase();
                     const markerC = String(row[0] || "").trim().toUpperCase();
 
-                    // Helper to detect and normalize sector
+                    // Helper to normalize sector name to match expected format
+                    const normalizeSector = (str: string): string => {
+                        if (!str) return "Unknown Sector";
+                        const s = str.trim().toUpperCase();
+
+                        // Direct matches first (most specific)
+                        if (s === "K12" || s === "K-12") return "K12";
+                        if (s === "HIGHER ED" || s === "HIGHER EDUCATION" || s === "HIGHER EDU" || s === "HIEHGER ED") return "Higher ED";  // Handle typo "Hiehger ED"
+                        if (s === "CCC" || s === "CIVIC" || s === "CULTURAL" || s === "COMMUNITY") return "CCC";
+                        if (s === "WORKPLACE" || s === "CORPORATE" || s === "COMMERCIAL" || s === "OFFICE") return "Workplace";
+                        if (s === "DIVERSIFIED HEALTHCARE INTERIORS" || s === "DIVERSIFIED") return "Diversified Healthcare Interiors";
+                        if (s === "HEALTHCARE HCA" || s === "HCA") return "Healthcare HCA";
+                        if (s === "HEALTHCARE DIV" || s === "DIV") return "Healthcare DIV";
+                        if (s === "HEALTHCARE" || s === "HEALTH") return "Healthcare DIV";
+
+                        // Partial matches - CRITICAL: Check multi-word phrases BEFORE single keywords
+                        if (s.includes("K12") || s.includes("K-12") || s.includes("SCHOOL")) return "K12";
+                        if (s.includes("HIGHER ED") || s.includes("HIGHER EDU") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC") || s.includes("HIEHGER")) return "Higher ED";
+                        // Healthcare - check specific phrases before generic keywords
+                        if (s.includes("DIVERSIFIED HEALTHCARE") || s.includes("HEALTHCARE DIVERSIFIED")) return "Diversified Healthcare Interiors";
+                        if (s.includes("HEALTHCARE HCA") || s.includes("HCA HEALTHCARE")) return "Healthcare HCA";
+                        if (s.includes("HEALTHCARE DIV") || s.includes("DIV HEALTHCARE")) return "Healthcare DIV";
+                        // Single keywords - only if not matched above
+                        if (s.includes("DIVERSIFIED")) return "Diversified Healthcare Interiors";
+                        if (s.includes("HCA")) return "Healthcare HCA";
+                        if (s.includes("HEALTHCARE") || s.includes("HEALTH CARE") || s.includes("HEALTH")) return "Healthcare DIV";
+                        if (s.includes("CCC") || s.includes("CIVIC") || s.includes("CULTURAL") || s.includes("COMMUNITY") || s.includes("MUSEUM") || s.includes("LIBRARY") || s.includes("PUBLIC")) return "CCC";
+                        if (s.includes("WORKPLACE") || s.includes("CORPORATE") || s.includes("COMMERCIAL") || s.includes("OFFICE") || s.includes("INTERIORS") || s.includes("STUDIO")) return "Workplace";
+
+                        // Return as-is if it matches one of our known sectors (case-insensitive)
+                        const knownSectors = ["K12", "Higher ED", "CCC", "Workplace", "Diversified Healthcare Interiors", "Healthcare HCA", "Healthcare DIV"];
+                        const normalized = knownSectors.find(ks => ks.toUpperCase() === s);
+                        if (normalized) return normalized;
+
+                        // If no match, return the original string (trimmed)
+                        return str.trim();
+                    };
+
+                    // Helper to detect and normalize sector (for fallback detection)
                     const detectSector = (str: string): string | null => {
                         const s = str.toUpperCase();
 
@@ -111,17 +153,22 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                         if (s.includes("K12") || s.includes("K-12") || s.includes("SCHOOL")) return "K12";
                         if (s.includes("HIGHER ED") || s.includes("HIGHER EDU") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC")) return "Higher ED";
 
-                        // Healthcare (Specifics first)
-                        // CRITICAL: Order matters. Check specific substrings before generic fallback.
-                        if (s.includes("DIVERSIFIED") || s.includes("DIV")) return "Diversified Healthcare Interiors"; // Catch "Diversified" or "Div" explicitly
+                        // Healthcare - Check most specific patterns FIRST to avoid misclassification
+                        // Order matters: specific multi-word phrases before single keywords
+                        if (s.includes("DIVERSIFIED HEALTHCARE") || s.includes("HEALTHCARE DIVERSIFIED")) return "Diversified Healthcare Interiors";
+                        if (s.includes("HEALTHCARE HCA") || s.includes("HCA HEALTHCARE")) return "Healthcare HCA";
+                        if (s.includes("HEALTHCARE DIV") || s.includes("DIV HEALTHCARE")) return "Healthcare DIV";
+                        // Single keyword checks (only if not already matched above)
+                        if (s.includes("DIVERSIFIED")) return "Diversified Healthcare Interiors";
                         if (s.includes("HCA")) return "Healthcare HCA";
-                        if (s.includes("HEALTHCARE") || s.includes("HEALTH CARE") || s.includes("HEALTH")) return "Healthcare DIV"; // Default for generic "Health" is DIV
+                        // Generic healthcare fallback - anything with "health" that hasn't matched goes to DIV
+                        if (s.includes("HEALTHCARE") || s.includes("HEALTH CARE") || s.includes("HEALTH")) return "Healthcare DIV";
 
                         // CCC
                         if (s.includes("CCC") || s.includes("CIVIC") || s.includes("CULTURAL") || s.includes("COMMUNITY") || s.includes("MUSEUM") || s.includes("LIBRARY") || s.includes("PUBLIC")) return "CCC";
 
                         // Workplace
-                        if (s.includes("WORKPLACE") || s.includes("CORPORATE") || s.includes("COMMERCIAL") || s.includes("OFFICE") || s.includes("INTERIORS") || s.includes("STUDIO")) return "Workplace";
+                        if (s.includes("WORKPLACE") || s.includes("CORPORATE") || s.includes("COMMERCIAL") || s.includes("OFFICE") || s.includes("STUDIO")) return "Workplace";
 
                         // Science & Tech (Preserve detection to avoid row-carryover errors)
                         if (s.includes("SCIENCE") || s.includes("S&T")) return "Science & Tech";
@@ -181,6 +228,32 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                     // Retrieve raw name for object creation
                     const rawName = row[nameIdx];
 
+                    // --- Determine Sector ---
+                    // Priority: 1) Sector column value, 2) Fallback to detection logic
+                    let projectSector = currentSector; // Default to current sector from headers
+
+                    if (sectorIdx !== -1 && row[sectorIdx]) {
+                        // Use the Sector column value if it exists
+                        const sectorValue = String(row[sectorIdx] || "").trim();
+                        if (sectorValue.length > 0) {
+                            projectSector = normalizeSector(sectorValue);
+                            logs.push(`Row ${i}: Using Sector column value: "${sectorValue}" -> "${projectSector}"`);
+                        } else {
+                            // Sector column exists but is empty, try fallback detection
+                            const sectorFromName = detectSector(markerA);
+                            if (sectorFromName) {
+                                projectSector = sectorFromName;
+                                logs.push(`Row ${i}: Sector column empty, detected from name: "${projectSector}"`);
+                            }
+                        }
+                    } else {
+                        // No Sector column, use fallback detection
+                        const sectorFromName = detectSector(markerA);
+                        if (sectorFromName) {
+                            projectSector = sectorFromName;
+                            logs.push(`Row ${i}: No Sector column, detected from name: "${projectSector}"`);
+                        }
+                    }
 
                     // --- Extract Metrics ---
 
@@ -242,7 +315,7 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                     const project: ProjectMetrics = {
                         id: `proj-${i}`,
                         name: String(rawName),
-                        sector: currentSector,
+                        sector: projectSector,
                         isEligible,
                         eligibilityStatus,
                         phase: String(row[phaseIdx] || "Unknown"),

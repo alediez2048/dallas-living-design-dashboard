@@ -61,7 +61,7 @@ const rows = [
 // Logic to test
 const testLogic = () => {
     rows.forEach((row, i) => {
-        const rawName = row[nameIdx];
+        const rawName = String(row[nameIdx] || '');
         const rawEligible = String(row[eligibleIdx]);
 
         // --- LOGIC FROM parser.ts (Updated) ---
