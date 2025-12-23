@@ -2,10 +2,10 @@
 
 ## Phase 1: Foundation & Setup
 **Objective:** Establish the project structure, install dependencies, and define data models.
-- [ ] **Scaffold Project:** Re-initialize Vite project with React + TypeScript.
-- [ ] **Install Core Dependencies:** `recharts` (charts), `papaparse` (CSV), `lodash` (data manipulation), `lucide-react` (icons), `xlsx` (optional, if direct Excel support is desired later).
-- [ ] **Styling Setup:** Initialize Tailwind CSS and define the custom color palette (Sleek dark mode/light mode themes).
-- [ ] **Type Definitions:** Create `types.ts` to strictly define the `ProjectMetrics` interface and Petal structures as per the PRD.
+- [x] **Scaffold Project:** Re-initialize Vite project with React + TypeScript.
+- [x] **Install Core Dependencies:** `recharts` (charts), `papaparse` (CSV), `lodash` (data manipulation), `lucide-react` (icons), `xlsx` (optional, if direct Excel support is desired later).
+- [x] **Styling Setup:** Initialize Tailwind CSS and define the custom color palette (Sleek dark mode/light mode themes).
+- [x] **Type Definitions:** Create `types.ts` to strictly define the `ProjectMetrics` interface and Petal structures as per the PRD.
 
 ## Phase 2: Data Engine (The "Brain")
 **Objective:** accurately parse the complex spreadsheet structure into a usable format.
