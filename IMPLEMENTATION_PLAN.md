@@ -19,9 +19,9 @@
 
 ## Phase 3: UI Architecture & Layout
 **Objective:** Create a premium, responsive application shell.
-- [ ] **Shell Component:** Build `DashboardLayout` with a modern sidebar or top nav.
-- [ ] **File Input:** Create a drag-and-drop zone or file picker to load the dataset (Client-sid only).
-- [ ] **State Management:** Set up a React Context or simple state store to hold the parsed data and make it accessible to all components.
+- [x] **Shell Component:** Build `DashboardLayout` with a modern sidebar or top nav.
+- [x] **File Input:** Create a drag-and-drop zone or file picker to load the dataset (Client-sid only).
+- [x] **State Management:** Set up a React Context or simple state store to hold the parsed data and make it accessible to all components.
 
 ## Phase 4: Data Visualization Components
 **Objective:** Build the individual charts that make up the dashboard.
