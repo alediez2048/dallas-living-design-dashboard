@@ -25,9 +25,9 @@
 
 ## Phase 4: Data Visualization Components
 **Objective:** Build the individual charts that make up the dashboard.
-- [ ] **Petal Radar Chart:** Build the central `PetalRadar` component using Recharts to visualize the 7+6 sub-categories.
-- [ ] **Goal Trackers:** Create animated progress bars/rings for the "80% EUI Reduction" and "40% Water Reduction" goals.
-- [ ] **Sector Comparisons:** Build the Bar Charts for comparing specific sectors against the Studio Average.
+- [x] **Petal Radar Chart:** Build the central `PetalRadar` component using Recharts to visualize the 7+6 sub-categories.
+- [x] **Goal Trackers:** Create animated progress bars/rings for the "80% EUI Reduction" and "40% Water Reduction" goals.
+- [x] **Sector Comparisons:** Build the Bar Charts for comparing specific sectors against the Studio Average.
 
 ## Phase 5: Dashboard Assembly
 **Objective:** Integrate components into the final views.
