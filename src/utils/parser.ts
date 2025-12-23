@@ -44,6 +44,7 @@ export const parseProjectData = async (file: File): Promise<ProjectMetrics[]> =>
                 // --- Map Critical Columns ---
                 // General
                 const nameIdx = findColIndex(mainHeaderRow, "PROJECT NAME");
+                const projNumIdx = findColIndex(mainHeaderRow, "PROJECT #");
                 const eligibleIdx = findColIndex(mainHeaderRow, "Eligible for reporting?");
                 const phaseIdx = findColIndex(mainHeaderRow, "Phase");
 
@@ -88,20 +89,42 @@ export const parseProjectData = async (file: File): Promise<ProjectMetrics[]> =>
                     // Skip empty rows
                     if (!row || row.length === 0) continue;
 
-                    const rawName = row[nameIdx];
+                    // CHECK SECTOR: Check both Name and Project # columns for Sector headers
+                    // The Excel file often puts sector headers in the first columns
+                    const markerA = String(row[nameIdx] || "").trim().toUpperCase();
+                    const markerB = String(row[projNumIdx] || "").trim().toUpperCase();
 
-                    // 1. Check for Sector Headers
-                    // Sector headers usually have the sector name in the first couple of columns or the Name column
-                    // Pattern: "EDUCATION (16 projects...)"
-                    if (typeof rawName === 'string' && (rawName.includes("EDUCATION") || rawName.includes("HEALTHCARE") || rawName.includes("COMMERCIAL") || rawName.includes("SCIENCE"))) {
-                        // Clean up sector name (remove parenthesis portion)
-                        currentSector = rawName.split("(")[0].trim();
-                        continue; // Skip this row, it's just a header
+                    // Helper to detect and normalize sector
+                    const detectSector = (str: string): string | null => {
+                        if (str.includes("EDUCATION")) return "Education";
+                        if (str.includes("K12") || str.includes("K-12")) return "K-12";
+                        if (str.includes("HIGHER ED")) return "Higher Education";
+                        if (str.includes("HEALTHCARE") || str.includes("HEALTH CARE")) return "Healthcare";
+                        if (str.includes("CORPORATE") || str.includes("WORKPLACE")) return "Workplace Interiors";
+                        if (str.includes("CCC") || str.includes("CIVIC")) return "CCC";
+                        if (str.includes("SCIENCE") || str.includes("S&T")) return "Science & Tech";
+                        return null;
+                    };
+
+                    const sectorFromA = detectSector(markerA);
+                    const sectorFromB = detectSector(markerB);
+
+                    if (sectorFromA) {
+                        currentSector = sectorFromA;
+                        continue;
+                    }
+                    if (sectorFromB) {
+                        currentSector = sectorFromB;
+                        continue;
                     }
 
                     // 2. Filter valid projects
                     // Must have a name and not be a sub-header row
-                    if (!rawName || rawName === "PROJECT NAME") continue;
+                    // Also ensure it's not just a purely numeric row or unrelated text
+                    if (!row[nameIdx] || row[nameIdx] === "PROJECT NAME") continue;
+
+                    // Retrieve raw name for object creation
+                    const rawName = row[nameIdx];
 
 
                     // --- Extract Metrics ---

@@ -24,6 +24,23 @@ async function inspectExcel() {
             console.log(`Row ${index + 1}:`, JSON.stringify(row));
         });
 
+        // Find Sector Column
+        const headerRowIndex = 4; // Row 5
+        const headerRow = data[headerRowIndex];
+        const sectorColIndex = headerRow.findIndex(cell => cell && cell.toString().toLowerCase().includes('sector'));
+
+        if (sectorColIndex !== -1) {
+            console.log(`\nFound Sector column at index ${sectorColIndex}`);
+            const sectors = new Set();
+            for (let i = headerRowIndex + 1; i < data.length; i++) {
+                const val = data[i][sectorColIndex];
+                if (val) sectors.add(val);
+            }
+            console.log("Unique Sectors:", Array.from(sectors));
+        } else {
+            console.log("\nCould not find 'Sector' column in Row 5");
+        }
+
     } catch (error) {
         console.error('Error reading file:', error);
     }

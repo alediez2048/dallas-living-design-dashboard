@@ -29,7 +29,7 @@ export const GoalTracker = ({ projects, type }: GoalTrackerProps) => {
     }
 
     return (
-        <div className="p-6 rounded-2xl bg-[#1e1e1e] border border-white/5 flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-white/5 flex flex-col justify-between h-40 relative overflow-hidden group shadow-sm dark:shadow-none transition-colors duration-300">
 
             {/* Background Progress Bar (Subtle) */}
             <div
@@ -38,7 +38,7 @@ export const GoalTracker = ({ projects, type }: GoalTrackerProps) => {
             />
 
             <div>
-                <h3 className="text-gray-400 font-medium mb-1">{label}</h3>
+                <h3 className="text-gray-500 dark:text-gray-400 font-medium mb-1">{label}</h3>
                 <div className="flex items-baseline gap-2">
                     <span className={`text-4xl font-bold ${color}`}>{percentage}%</span>
                     <span className="text-sm text-gray-500">of projects</span>
@@ -47,13 +47,13 @@ export const GoalTracker = ({ projects, type }: GoalTrackerProps) => {
 
             <div className="flex justify-between items-end mt-4">
                 <div className="text-xs text-gray-500">
-                    <span className="text-white font-semibold">{meetingGoalCount}</span> / {total} Total
+                    <span className="text-gray-900 dark:text-white font-semibold">{meetingGoalCount}</span> / {total} Total
                 </div>
 
                 {/* Mini Circle visual */}
                 <svg viewBox="0 0 36 36" className="w-12 h-12 transform -rotate-90">
                     <path
-                        className="text-gray-700"
+                        className="text-gray-100 dark:text-gray-700"
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                         fill="none"
                         stroke="currentColor"

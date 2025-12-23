@@ -37,9 +37,9 @@
 
 ## Phase 6: Polish & "Wow" Factor
 **Objective:** Ensure the application feels premium.
-- [ ] **Aesthetics:** Apply glassmorphism effects, smooth gradients, and tasteful box shadows.
-- [ ] **Interactivity:** Add hover effects to chart elements and smooth transitions between tabs.
-- [ ] **Responsive Check:** Ensure layout works on smaller laptop screens (13").
+- [x] **Aesthetics:** Apply glassmorphism effects, smooth gradients, and tasteful box shadows.
+- [x] **Interactivity:** Add hover effects to chart elements and smooth transitions between tabs.
+- [x] **Responsive Check:** Ensure layout works on smaller laptop screens (13").
 
 ## Phase 7: Deployment & Handoff
 - [ ] **Build:** Run production build optimization.

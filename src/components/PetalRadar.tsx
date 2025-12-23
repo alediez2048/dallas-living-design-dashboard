@@ -1,12 +1,16 @@
 import { useMemo } from 'react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar, Tooltip, Legend } from 'recharts';
 import { ProjectMetrics } from '../types';
+import { useTheme } from '../context/ThemeContext';
 
 interface PetalRadarProps {
     projects: ProjectMetrics[];
 }
 
 export const PetalRadar = ({ projects }: PetalRadarProps) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
 
     const data = useMemo(() => {
         if (projects.length === 0) return [];
@@ -64,13 +68,13 @@ export const PetalRadar = ({ projects }: PetalRadarProps) => {
     }, [projects]);
 
     return (
-        <div className="h-[400px] w-full bg-[#1e1e1e] rounded-2xl border border-white/5 p-4 flex flex-col items-center justify-center relative">
-            <h3 className="text-gray-400 font-medium absolute top-6 left-6">Studio Performance (Average)</h3>
+        <div className="h-[400px] w-full bg-white dark:bg-[#1e1e1e] rounded-2xl border border-gray-200 dark:border-white/5 p-4 flex flex-col items-center justify-center relative shadow-sm dark:shadow-none transition-colors duration-300">
+            <h3 className="text-gray-500 dark:text-gray-400 font-medium absolute top-6 left-6">Studio Performance (Average)</h3>
 
             <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
-                    <PolarGrid stroke="#444" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 12 }} />
+                    <PolarGrid stroke={isDark ? "#444" : "#e5e7eb"} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: isDark ? '#888' : '#6b7280', fontSize: 12 }} />
                     <Radar
                         name="Studio Average"
                         dataKey="A"
@@ -80,7 +84,13 @@ export const PetalRadar = ({ projects }: PetalRadarProps) => {
                         fillOpacity={0.3}
                     />
                     <Tooltip
-                        contentStyle={{ backgroundColor: '#222', border: '1px solid #444', color: '#fff' }}
+                        contentStyle={{
+                            backgroundColor: isDark ? '#222' : '#fff',
+                            border: isDark ? '1px solid #444' : '1px solid #e5e7eb',
+                            color: isDark ? '#fff' : '#111827',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
                         itemStyle={{ color: '#60a5fa' }}
                     />
                 </RadarChart>
