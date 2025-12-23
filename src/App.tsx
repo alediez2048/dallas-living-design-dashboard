@@ -1,34 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { DataProvider, useData } from './context/DataContext'
+import { FileUploader } from './components/FileUploader'
+import { DashboardLayout } from './components/DashboardLayout'
 
-function App() {
-  const [count, setCount] = useState(0)
+// Inner component to access context
+const DashboardContent = () => {
+  const { projects } = useData();
+
+  if (projects.length === 0) {
+    return (
+      <DashboardLayout>
+        <FileUploader />
+      </DashboardLayout>
+    );
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <DashboardLayout>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Placeholder cards for now */}
+        <div className="p-6 rounded-2xl bg-[#1e1e1e] border border-white/5">
+          <h3 className="text-gray-400 mb-2">Total Projects</h3>
+          <p className="text-4xl font-bold">{projects.length}</p>
+        </div>
+        <div className="p-6 rounded-2xl bg-[#1e1e1e] border border-white/5">
+          <h3 className="text-gray-400 mb-2">Resilience Score</h3>
+          <p className="text-4xl font-bold text-green-400">--</p>
+        </div>
+        <div className="p-6 rounded-2xl bg-[#1e1e1e] border border-white/5">
+          <h3 className="text-gray-400 mb-2">Health Score</h3>
+          <p className="text-4xl font-bold text-blue-400">--</p>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+
+      <div className="mt-8 p-6 rounded-2xl bg-[#1e1e1e] border border-white/5">
+        <h3 className="text-lg font-semibold mb-4">Raw Data Preview</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-400">
+            <thead className="text-xs uppercase bg-white/5 text-gray-200">
+              <tr>
+                <th className="px-4 py-3">Project Name</th>
+                <th className="px-4 py-3">Sector</th>
+                <th className="px-4 py-3">Phase</th>
+                <th className="px-4 py-3">Eligible?</th>
+                <th className="px-4 py-3">EUI Red.</th>
+                <th className="px-4 py-3">Water Red.</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {projects.slice(0, 10).map((p) => (
+                <tr key={p.id} className="hover:bg-white/5">
+                  <td className="px-4 py-3 font-medium text-white">{p.name}</td>
+                  <td className="px-4 py-3">{p.sector}</td>
+                  <td className="px-4 py-3">{p.phase}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded text-xs ${p.isEligible ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-300'}`}>
+                      {p.isEligible ? 'Yes' : 'No'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">{(p.resilience.euiReduction * 100).toFixed(1)}%</td>
+                  <td className="px-4 py-3">{(p.resilience.indoorWaterReduction * 100).toFixed(1)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </DashboardLayout>
+  )
+}
+
+function App() {
+  return (
+    <DataProvider>
+      <DashboardContent />
+    </DataProvider>
   )
 }
 

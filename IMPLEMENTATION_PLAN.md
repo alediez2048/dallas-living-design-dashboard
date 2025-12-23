@@ -9,13 +9,13 @@
 
 ## Phase 2: Data Engine (The "Brain")
 **Objective:** accurately parse the complex spreadsheet structure into a usable format.
-- [ ] **Parsing Logic:** Implement a robust parser to handle the multi-row header challenge (Row 5 target).
+- [x] **Parsing Logic:** Implement a robust parser to handle the multi-row header challenge (Row 5 target).
     - Detect key columns: Project Name, Sector, EUI metrics, Carbon metrics, etc.
     - Handle converting Excel/CSV row indices (start reading data at Row 9).
-- [ ] **Data Transformation:** Create a "Mapper" utility to convert raw arrays into strictly typed `ProjectMetrics` objects.
+- [x] **Data Transformation:** Create a "Mapper" utility to convert raw arrays into strictly typed `ProjectMetrics` objects.
     - Implement logic for binary checks ("Switch List Vetted" = Yes/No).
     - Calculate derived scores for the Petals.
-- [ ] **Validation:** Write unit tests or manual verification scripts to ensure specific rows from the source file match the parsed output.
+- [x] **Validation:** Write unit tests or manual verification scripts to ensure specific rows from the source file match the parsed output.
 
 ## Phase 3: UI Architecture & Layout
 **Objective:** Create a premium, responsive application shell.
