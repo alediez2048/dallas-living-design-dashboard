@@ -50,6 +50,7 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 const projNumIdx = findColIndex(mainHeaderRow, "PROJECT #");
                 const eligibleIdx = findColIndex(mainHeaderRow, "Eligible for reporting?");
                 const phaseIdx = findColIndex(mainHeaderRow, "Phase");
+                const archIntIdx = findColIndex(mainHeaderRow, "Arch vs Int");
                 const sectorIdx = findColIndex(mainHeaderRow, "Sector");
 
                 logs.push(`Column Mapping: Name=${nameIdx}, Proj#=${projNumIdx}, Eligible=${eligibleIdx}, Sector=${sectorIdx}`);
@@ -319,6 +320,7 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                         isEligible,
                         eligibilityStatus,
                         phase: String(row[phaseIdx] || "Unknown"),
+                        archVsInt: String(row[archIntIdx] || "Unknown"),
 
                         resilience: {
                             euiReduction: euiReduction,

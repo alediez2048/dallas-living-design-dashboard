@@ -54,6 +54,7 @@ export const generateSampleData = (): ProjectMetrics[] => {
             name,
             sector,
             phase,
+            archVsInt: Math.random() > 0.5 ? 'Architecture' : 'Interiors',
             isEligible: eligibilityStatus === 'Yes',
             eligibilityStatus,
 

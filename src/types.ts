@@ -6,6 +6,7 @@ export interface ProjectMetrics {
     isEligible: boolean;
     eligibilityStatus: string;
     phase: string; // Added Phase as it is mentioned in key features (Data Detail List)
+    archVsInt: string; // "Architecture" vs "Interiors"
 
     // Petal: Resilience & Regeneration
     resilience: {

@@ -141,6 +141,7 @@ const DashboardContent = () => {
                   <tr>
                     <th className="px-5 py-4 rounded-tl-lg">Project Name</th>
                     <th className="px-5 py-4">Sector</th>
+                    <th className="px-5 py-4">Type</th>
                     <th className="px-5 py-4">Phase</th>
                     <th className="px-5 py-4 text-center">Eligible?</th>
                     <th className="px-5 py-4 text-right">EUI Red.</th>
@@ -165,6 +166,11 @@ const DashboardContent = () => {
                         {p.name}
                       </td>
                       <td className="px-5 py-3 opacity-80">{p.sector}</td>
+                      <td className="px-5 py-3 opacity-80">
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${p.archVsInt === 'Architecture' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300' : p.archVsInt === 'Interiors' ? 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>
+                          {p.archVsInt}
+                        </span>
+                      </td>
                       <td className="px-5 py-3 opacity-80">
                         <span className="px-2 py-1 rounded-md bg-gray-100 dark:bg-white/5 text-xs">{p.phase}</span>
                       </td>
