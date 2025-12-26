@@ -127,7 +127,7 @@ const DashboardContent = () => {
           </motion.div>
 
           {/* Detailed List */}
-          <motion.div variants={itemVariants} className="lg:col-span-2 p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col shadow-sm dark:shadow-none">
+          <motion.div variants={itemVariants} className="lg:col-span-2 p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col shadow-sm dark:shadow-none overflow-hidden">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-teal-500 dark:from-blue-200 dark:to-teal-200 bg-clip-text text-transparent">Project Details</h3>
               <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/5">
@@ -135,8 +135,8 @@ const DashboardContent = () => {
               </span>
             </div>
 
-            <div className="overflow-x-auto flex-1 h-[400px] scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10 hover:scrollbar-thumb-gray-300 dark:hover:scrollbar-thumb-white/20">
-              <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400 border-collapse">
+            <div className="overflow-x-auto overflow-y-auto flex-1 max-h-[400px] scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10 hover:scrollbar-thumb-gray-300 dark:hover:scrollbar-thumb-white/20 -mx-6 px-6">
+              <table className="min-w-full text-left text-sm text-gray-500 dark:text-gray-400 border-collapse">
                 <thead className="text-xs uppercase bg-gray-50/90 dark:bg-[#1a1a1a]/90 text-gray-700 dark:text-gray-200 sticky top-0 backdrop-blur-md z-10 shadow-sm">
                   <tr>
                     <th className="px-5 py-4 rounded-tl-lg">Project Name</th>
@@ -148,7 +148,7 @@ const DashboardContent = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                  {filteredProjects.slice(0, 100).map((p, i) => (
+                  {filteredProjects.map((p, i) => (
                     <motion.tr
                       key={p.id}
                       initial={{ opacity: 0, x: -10 }}
