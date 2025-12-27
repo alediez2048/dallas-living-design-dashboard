@@ -15,6 +15,8 @@ export interface ProjectMetrics {
         operationalCarbonReduction: number | null;
         embodiedCarbonPathway: string; // e.g., "TBD", "Tracking"
         indoorWaterReduction: number;
+        outdoorWaterReduction: number | null; // Added: derived from "PW Outdoor Water"
+        lpdReduction: number | null; // Added: derived from "LPD 2030 Goal"
         meetsWaterGoal: boolean; // true if indoorWaterReduction >= 0.40
         ecologyScore: number; // derived from "Ecology - 4 Total Questions"
         resilienceScore: number; // derived from "Resilience - 1~3 Total Question"

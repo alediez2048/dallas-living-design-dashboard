@@ -8,6 +8,27 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 // Inner component to access context
+interface MetricCardProps {
+  label: string;
+  value: number;
+  total?: number;
+  color: string;
+}
+
+const MetricCard = ({ label, value, total, color }: MetricCardProps) => (
+  <motion.div variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }} className="p-5 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none h-full">
+    <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium text-sm h-10 flex items-center">{label}</h3>
+    <div className="flex items-baseline gap-2">
+      <p className={`text-4xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
+        {value}
+      </p>
+      {total !== undefined && (
+        <span className="text-xs text-gray-500 uppercase tracking-wider">/ {total}</span>
+      )}
+    </div>
+  </motion.div>
+);
+
 const DashboardContent = () => {
   const { projects, logs } = useData();
   const [activeSector, setActiveSector] = useState<string>("All Sectors");
@@ -80,8 +101,11 @@ const DashboardContent = () => {
         animate="visible"
       >
         {/* Top Row: Counters & Goals */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
-          <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none">
+        {/* Top Row: Counters & Goals - Split by Arch vs Int */}
+
+        {/* Restored Studio Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <motion.div variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }} className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none">
             <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Total Projects</h3>
             <div className="flex items-baseline gap-2">
               <p className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-200 bg-clip-text text-transparent">
@@ -91,7 +115,7 @@ const DashboardContent = () => {
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none">
+          <motion.div variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }} className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none">
             <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Total Eligible</h3>
             <div className="flex items-baseline gap-2">
               <p className="text-5xl font-bold bg-gradient-to-r from-gray-700 to-gray-400 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
@@ -100,24 +124,82 @@ const DashboardContent = () => {
               <span className="text-xs text-gray-500 uppercase tracking-wider">Projects</span>
             </div>
           </motion.div>
+        </div>
 
-          <motion.div variants={itemVariants}>
-            <GoalTracker projects={filteredProjects} type="eui" />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <GoalTracker projects={filteredProjects} type="water" />
-          </motion.div>
+        {/* Architecture Overview */}
+        <div className="mb-6">
+          <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
+            Architecture Overview
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <MetricCard
+              label="Meeting 2030 EUI Goal"
+              value={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meets2030Goal).length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+              color="from-green-500 to-green-400"
+            />
+            <MetricCard
+              label="Meeting Indoor Water Goal"
+              value={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsWaterGoal).length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+              color="from-blue-500 to-blue-400"
+            />
+            {/* Outdoor Water - assume > 50% or non-null if data is sparse? checking for 50% */}
+            <MetricCard
+              label="Meeting Outdoor Water Goal"
+              value={filteredProjects.filter(p => p.archVsInt === 'Architecture' && (p.resilience.outdoorWaterReduction || 0) >= 0.50).length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+              color="from-cyan-500 to-cyan-400"
+            />
+            <MetricCard
+              label="Switch List Vetted"
+              value={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.health.switchListVetted).length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+              color="from-amber-500 to-amber-400"
+            />
+            <MetricCard
+              label="Tracking Embodied Carbon"
+              value={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD').length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+              color="from-emerald-500 to-emerald-400"
+            />
+          </div>
+        </div>
 
-          <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none">
-            <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Switch List Vetted</h3>
-            <p className="text-5xl font-bold text-teal-400">
-              {filteredProjects.filter(p => p.health.switchListVetted).length}
-            </p>
-            <p className="text-xs text-teal-400/50 mt-2 flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-              Verified Healthy
-            </p>
-          </motion.div>
+        {/* Interiors Overview */}
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-teal-500 rounded-full"></span>
+            Interiors Overview
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* LPD - assume > 10% for now if data is sparse, or strictly verify goal later */}
+            <MetricCard
+              label="Meeting LPD 2030 Goal"
+              value={filteredProjects.filter(p => p.archVsInt === 'Interiors' && (p.resilience.lpdReduction || 0) >= 0.25).length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+              color="from-yellow-500 to-yellow-400"
+            />
+            <MetricCard
+              label="Meeting Indoor Water Goal"
+              value={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsWaterGoal).length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+              color="from-blue-500 to-blue-400"
+            />
+            <MetricCard
+              label="Tracking Embodied Carbon"
+              value={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD').length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+              color="from-emerald-500 to-emerald-400"
+            />
+            <MetricCard
+              label="Switch List Vetted"
+              value={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.health.switchListVetted).length}
+              total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+              color="from-amber-500 to-amber-400"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -167,7 +249,7 @@ const DashboardContent = () => {
                       </td>
                       <td className="px-5 py-3 opacity-80">{p.sector}</td>
                       <td className="px-5 py-3 opacity-80">
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${p.archVsInt === 'Architecture' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300' : p.archVsInt === 'Interiors' ? 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>
+                        <span className={`px-3 py-1.5 rounded-lg text-sm ${p.archVsInt === 'Architecture' ? 'bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300' : p.archVsInt === 'Interiors' ? 'bg-teal-100 text-teal-600 dark:bg-teal-500/20 dark:text-teal-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>
                           {p.archVsInt}
                         </span>
                       </td>

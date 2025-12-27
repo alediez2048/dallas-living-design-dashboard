@@ -64,6 +64,8 @@ export const generateSampleData = (): ProjectMetrics[] => {
                 operationalCarbonReduction: Math.random() > 0.3 ? Math.random() * 0.5 : null,
                 embodiedCarbonPathway: ['TBD', 'Tracking', 'N/A'][Math.floor(Math.random() * 3)],
                 indoorWaterReduction: waterReduction,
+                outdoorWaterReduction: Math.random() > 0.4 ? 0.3 + Math.random() * 0.5 : null, // 30-80% or null
+                lpdReduction: Math.random() > 0.2 ? 0.1 + Math.random() * 0.4 : null, // 10-50%
                 meetsWaterGoal: waterReduction >= 0.40,
                 ecologyScore: Math.floor(Math.random() * 5), // 0-4
                 resilienceScore: Math.floor(Math.random() * 4), // 0-3

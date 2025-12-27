@@ -76,7 +76,25 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 // Water
                 // "Water - Indoor" is in Row 2
                 // "Ttl Flow: Potable Water Use Reduction" is in Row 3 under that section
+                // "Ttl Flow: Potable Water Use Reduction" is in Row 3 under that section
                 const indWaterRedIdx = findColIndex(subHeaderRow, "Ttl Flow: Potable Water Use Reduction");
+
+                // Search for Outdoor Water column (generic search)
+                // "PW Outdoor Water" or similar
+                let outWaterRedIdx = findColIndex(mainHeaderRow, "Outdoor Water");
+                if (outWaterRedIdx === -1) outWaterRedIdx = findColIndex(subHeaderRow, "Outdoor Water");
+
+                // LPD
+                // "LPD 2030 Goal" or similar
+                let lpdIdx = findColIndex(mainHeaderRow, "LPD");
+                if (lpdIdx === -1) lpdIdx = findColIndex(subHeaderRow, "LPD");
+                if (lpdIdx === -1) lpdIdx = findColIndex(mainHeaderRow, "Lighting Power Density");
+
+                if (outWaterRedIdx !== -1) logs.push(`Found Outdoor Water Column at index ${outWaterRedIdx}`);
+                else logs.push("Outdoor Water Column NOT found");
+
+                if (lpdIdx !== -1) logs.push(`Found LPD Column at index ${lpdIdx}`);
+                else logs.push("LPD Column NOT found");
 
                 // Ecology & Resilience Scores (Row 2)
                 const ecologyIdx = findColIndex(mainHeaderRow, "Ecology");
@@ -293,6 +311,12 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                     // Often already a percentage in the sheet? Let's assume decimal or %
                     const waterReduction = getNumber(row[indWaterRedIdx]); // If it's 0.45 it means 45%
 
+                    // Outdoor Water
+                    const outdoorWaterReduction = outWaterRedIdx !== -1 ? getNumber(row[outWaterRedIdx]) : null;
+
+                    // LPD
+                    const lpdReduction = lpdIdx !== -1 ? getNumber(row[lpdIdx]) : null;
+
 
                     // Determine Eligibility Status
                     const rawEligible = String(row[eligibleIdx] || "").trim();
@@ -320,7 +344,12 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                         isEligible,
                         eligibilityStatus,
                         phase: String(row[phaseIdx] || "Unknown"),
-                        archVsInt: String(row[archIntIdx] || "Unknown"),
+                        archVsInt: (() => {
+                            const val = String(row[archIntIdx] || "").trim();
+                            if (val.toLowerCase() === 'a' || val.toLowerCase() === 'architecture') return "Architecture";
+                            if (val.toLowerCase() === 'i' || val.toLowerCase() === 'interiors') return "Interiors";
+                            return val || "Unknown";
+                        })(),
 
                         resilience: {
                             euiReduction: euiReduction,
@@ -328,6 +357,8 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                             operationalCarbonReduction: getNumber(row[opCarbonIdx]), // Placeholder if column exists
                             embodiedCarbonPathway: String(row[embodiedCarbonIdx] || "TBD"),
                             indoorWaterReduction: waterReduction,
+                            outdoorWaterReduction: outdoorWaterReduction,
+                            lpdReduction: lpdReduction,
                             meetsWaterGoal: waterReduction >= 0.40,
                             ecologyScore: getScore(row[ecologyIdx]),
                             resilienceScore: getScore(row[resilienceIdx]),
