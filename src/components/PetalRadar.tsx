@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip, Legend } from 'recharts';
 import { ProjectMetrics } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
@@ -55,8 +55,6 @@ export const PetalRadar = ({ projects }: PetalRadarProps) => {
 
         // Create array for Recharts
         return [
-            { subject: 'EUI Red.', A: acc.euiReduction / totalProjects, fullMark: 100 },
-            { subject: 'Water Red.', A: acc.indoorWater / totalProjects, fullMark: 100 },
             { subject: 'Ecology', A: acc.ecology / totalProjects, fullMark: 100 },
             { subject: 'Resilience', A: acc.resilience / totalProjects, fullMark: 100 },
             { subject: 'Air', A: acc.air / totalProjects, fullMark: 100 },
@@ -75,6 +73,7 @@ export const PetalRadar = ({ projects }: PetalRadarProps) => {
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
                     <PolarGrid stroke={isDark ? "#444" : "#e5e7eb"} />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: isDark ? '#888' : '#6b7280', fontSize: 12 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                     <Radar
                         name="Studio Average"
                         dataKey="A"

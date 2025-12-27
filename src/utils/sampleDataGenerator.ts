@@ -65,7 +65,9 @@ export const generateSampleData = (): ProjectMetrics[] => {
                 embodiedCarbonPathway: ['TBD', 'Tracking', 'N/A'][Math.floor(Math.random() * 3)],
                 indoorWaterReduction: waterReduction,
                 outdoorWaterReduction: Math.random() > 0.4 ? 0.3 + Math.random() * 0.5 : null, // 30-80% or null
+                meetsOutdoorWaterGoal: Math.random() > 0.5,
                 lpdReduction: Math.random() > 0.2 ? 0.1 + Math.random() * 0.4 : null, // 10-50%
+                meetsLpdGoal: Math.random() > 0.5,
                 meetsWaterGoal: waterReduction >= 0.40,
                 ecologyScore: Math.floor(Math.random() * 5), // 0-4
                 resilienceScore: Math.floor(Math.random() * 4), // 0-3
@@ -79,6 +81,12 @@ export const generateSampleData = (): ProjectMetrics[] => {
                 acousticScore: Math.floor(Math.random() * 6),
                 waterQualityScore: Math.floor(Math.random() * 6),
                 biophiliaScore: Math.floor(Math.random() * 6),
+            },
+            designPerformance: {
+                conceptualClarityScore: Math.random() > 0.1 ? Math.random() : null,
+                researchInnovationScore: Math.random() > 0.1 ? Math.random() : null,
+                technologyTectonicsScore: Math.random() > 0.1 ? Math.random() : null,
+                communityInclusionScore: Math.random() > 0.1 ? Math.random() : null,
             },
         });
     });

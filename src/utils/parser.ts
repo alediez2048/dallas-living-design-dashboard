@@ -33,6 +33,7 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 // Identify Header Rows
                 // Row 2 (Index 1): Main Headers ("PROJECT NAME", "Phase", "Switch List Vetted")
                 // Row 3 (Index 2): Sub Headers ("Predicted Net EUI", "% of reduction")
+                const superHeaderRow = rawData[0]; // Row 1 (Index 0) - Contains Petal Categories
                 const mainHeaderRow = rawData[1];
                 const subHeaderRow = rawData[2];
 
@@ -113,6 +114,27 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 const acousticIdx = findColIndex(mainHeaderRow, "Acoustic Perform");
                 const waterQualityIdx = findColIndex(mainHeaderRow, "Water Quality");
                 const biophiliaIdx = findColIndex(mainHeaderRow, "Biophilia");
+
+                // --- Design Drivers / Petals (Row 1 headers) ---
+                const conceptualIdx = findColIndex(superHeaderRow, "CONCEPTUAL CLARITY");
+                const researchIdx = findColIndex(superHeaderRow, "RESEARCH & INNOVATION");
+                const techIdx = findColIndex(superHeaderRow, "TECHNOLOGY & TECTONICS");
+                const commIdx = findColIndex(superHeaderRow, "COMMUNITY & INCLUSION");
+
+                // Helper to extract totals from main header row (e.g., "4 Total Questions")
+                const getTotal = (idx: number, fallback: number): number => {
+                    if (idx === -1) return fallback;
+                    const headerVal = String(mainHeaderRow[idx] || "");
+                    const match = headerVal.match(/^(\d+)/);
+                    return match ? parseInt(match[1]) : fallback;
+                };
+
+                const totalConceptual = getTotal(conceptualIdx, 4);
+                const totalResearch = getTotal(researchIdx, 4);
+                const totalTech = getTotal(techIdx, 4);
+                const totalComm = getTotal(commIdx, 6);
+
+                logs.push(`Petals Mapping: Conceptual=${conceptualIdx} (Total:${totalConceptual}), Research=${researchIdx} (Total:${totalResearch}), Tech=${techIdx} (Total:${totalTech}), Comm=${commIdx} (Total:${totalComm})`);
 
 
                 const parsedProjects: ProjectMetrics[] = [];
@@ -427,6 +449,14 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                     const isEligible = eligibilityStatus === "Yes";
 
 
+                    const getPetalScore = (idx: number, total: number): number | null => {
+                        if (idx === -1) return null;
+                        const val = row[idx];
+                        if (val === null || val === undefined || val === '') return null;
+                        const num = getScore(val);
+                        return total > 0 ? num / total : 0;
+                    };
+
                     const project: ProjectMetrics = {
                         id: `proj-${i}`,
                         name: String(rawName),
@@ -464,6 +494,12 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                             acousticScore: getScore(row[acousticIdx]),
                             waterQualityScore: getScore(row[waterQualityIdx]),
                             biophiliaScore: getScore(row[biophiliaIdx]),
+                        },
+                        designPerformance: {
+                            conceptualClarityScore: getPetalScore(conceptualIdx, totalConceptual),
+                            researchInnovationScore: getPetalScore(researchIdx, totalResearch),
+                            technologyTectonicsScore: getPetalScore(techIdx, totalTech),
+                            communityInclusionScore: getPetalScore(commIdx, totalComm),
                         },
                     };
 

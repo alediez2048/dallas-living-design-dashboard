@@ -34,6 +34,14 @@ export interface ProjectMetrics {
         waterQualityScore: number;
         biophiliaScore: number;
     };
+
+    // New: Design Drivers / Petals Performance
+    designPerformance: {
+        conceptualClarityScore: number | null; // X / 4
+        researchInnovationScore: number | null; // X / 4
+        technologyTectonicsScore: number | null; // X / 4
+        communityInclusionScore: number | null; // X / 6
+    };
 }
 
 export interface SectorStats {

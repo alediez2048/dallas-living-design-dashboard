@@ -2,6 +2,7 @@ import { DataProvider, useData } from './context/DataContext'
 import { FileUploader } from './components/FileUploader'
 import { DashboardLayout } from './components/DashboardLayout'
 import { PetalRadar } from './components/PetalRadar'
+import { PetalsPerformanceRadar } from './components/PetalsPerformanceRadar'
 import { GoalTracker } from './components/GoalTracker'
 import { ProjectListModal } from './components/ProjectListModal'
 import { ProjectMetrics } from './types'
@@ -312,13 +313,14 @@ const DashboardContent = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Radar Chart */}
-          <motion.div variants={itemVariants} className="lg:col-span-1">
-            <PetalRadar projects={filteredProjects} />
+          {/* Main Radar Charts */}
+          <motion.div variants={itemVariants} className="lg:col-span-1 flex flex-col gap-6">
+            <PetalsPerformanceRadar projects={filteredProjects.filter(p => p.isEligible)} />
+            <PetalRadar projects={filteredProjects.filter(p => p.isEligible)} />
           </motion.div>
 
           {/* Detailed List */}
-          <motion.div variants={itemVariants} className="lg:col-span-2 p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col shadow-sm dark:shadow-none overflow-hidden">
+          <motion.div variants={itemVariants} className="lg:col-span-2 p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col shadow-sm dark:shadow-none overflow-hidden h-[824px]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-teal-500 dark:from-blue-200 dark:to-teal-200 bg-clip-text text-transparent">Project Details</h3>
               <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/5">
@@ -326,7 +328,7 @@ const DashboardContent = () => {
               </span>
             </div>
 
-            <div className="overflow-x-auto overflow-y-auto flex-1 max-h-[400px] scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10 hover:scrollbar-thumb-gray-300 dark:hover:scrollbar-thumb-white/20 -mx-6 px-6">
+            <div className="overflow-x-auto overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10 hover:scrollbar-thumb-gray-300 dark:hover:scrollbar-thumb-white/20 -mx-6 px-6">
               <table className="min-w-full text-left text-sm text-gray-500 dark:text-gray-400 border-collapse">
                 <thead className="text-xs uppercase bg-gray-50/90 dark:bg-[#1a1a1a]/90 text-gray-700 dark:text-gray-200 sticky top-0 backdrop-blur-md z-10 shadow-sm">
                   <tr>
