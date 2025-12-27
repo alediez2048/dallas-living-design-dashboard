@@ -7,6 +7,11 @@ type RawRow = (string | number | null)[];
 /**
  * Parses the raw Excel file buffer into structured ProjectMetrics objects.
  * Handles the specific multi-row header format of the Dallas Living Design Dashboard.
+ *
+ * IMPORTANT: If you modify logic here (column detection, metric calculations, priority rules),
+ * you MUST update:
+ * 1. The Logic Guide: dashboard_logic_guide.md
+ * 2. The UI Legend: src/components/LegendModal.tsx
  */
 export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics[], logs: string[] }> => {
     return new Promise((resolve, reject) => {
@@ -299,13 +304,39 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
 
 
                     // EUI Calculation
-                    const predictedEui = getNumber(row[predictedEuiIdx]);
-                    const baselineEui = getNumber(row[baselineEuiIdx]);
+                    const predictedVal = row[predictedEuiIdx];
+                    const baselineVal = row[baselineEuiIdx];
+
+                    const predictedEui = getNumber(predictedVal);
+                    const baselineEui = getNumber(baselineVal);
+
+                    // Explicit check for missing data to avoid 100% reduction on empty cells
+                    const hasPredicted = typeof predictedVal === 'number' || (typeof predictedVal === 'string' && predictedVal.trim() !== '');
+
                     // Calculate reduction if both exist, else 0
                     let euiReduction = 0;
-                    if (baselineEui > 0) {
+                    if (baselineEui > 0 && hasPredicted) {
                         euiReduction = (baselineEui - predictedEui) / baselineEui;
                     }
+
+                    // Check for explicit "Meet 2030" column override
+                    const meet2030Idx = [
+                        findColIndex(mainHeaderRow, "Meet 2030"),
+                        findColIndex(subHeaderRow, "Meet 2030"),
+                        findColIndex(mainHeaderRow, "2030 Goal"),
+                        findColIndex(subHeaderRow, "2030 Goal")
+                    ].find(idx => idx !== -1) ?? -1;
+
+                    let explicitMeets2030 = null;
+                    if (meet2030Idx !== -1) {
+                        const val = String(row[meet2030Idx] || "").trim().toLowerCase();
+                        if (val.startsWith("y")) explicitMeets2030 = true;
+                        if (val.startsWith("n")) explicitMeets2030 = false;
+                    }
+
+                    const calculatedMeets2030 = euiReduction >= 0.80;
+                    // Prioritize explicit column if available, otherwise use calculation
+                    const meets2030Goal = explicitMeets2030 !== null ? explicitMeets2030 : calculatedMeets2030;
 
                     // Water Reduction
                     // Often already a percentage in the sheet? Let's assume decimal or %
@@ -333,6 +364,65 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                         eligibilityStatus = "No";
                     }
 
+                    // Explicit "Meets indoor Water Commitment" check
+                    const meetsWaterIdx = [
+                        findColIndex(mainHeaderRow, "Meets indoor Water Commitment"),
+                        findColIndex(subHeaderRow, "Meets indoor Water Commitment"),
+                        findColIndex(mainHeaderRow, "Indoor Water Commitment"),
+                        findColIndex(subHeaderRow, "Indoor Water Commitment"),
+                        findColIndex(mainHeaderRow, "Water Commitment"),
+                        findColIndex(subHeaderRow, "Water Commitment"),
+                        findColIndex(mainHeaderRow, "Meets Water Goal"),
+                        findColIndex(subHeaderRow, "Meets Water Goal")
+                    ].find(idx => idx !== -1) ?? -1;
+
+                    let explicitMeetsWater = null;
+                    if (meetsWaterIdx !== -1) {
+                        const val = String(row[meetsWaterIdx] || "").trim().toLowerCase();
+                        if (val.startsWith("y")) explicitMeetsWater = true;
+                        if (val.startsWith("n")) explicitMeetsWater = false;
+                    }
+
+                    const calculatedMeetsWater = waterReduction >= 0.40;
+                    const meetsWaterGoal = explicitMeetsWater !== null ? explicitMeetsWater : calculatedMeetsWater;
+
+                    // Outdoor Water Explicit Check
+                    const meetsOutdoorWaterIdx = [
+                        findColIndex(mainHeaderRow, "Meets PW Outdoor Water Commitment"),
+                        findColIndex(subHeaderRow, "Meets PW Outdoor Water Commitment"),
+                        findColIndex(mainHeaderRow, "Outdoor Water Commitment"),
+                        findColIndex(subHeaderRow, "Outdoor Water Commitment"),
+                        findColIndex(mainHeaderRow, "PW Outdoor Water Commitment"),
+                        findColIndex(subHeaderRow, "PW Outdoor Water Commitment")
+                    ].find(idx => idx !== -1) ?? -1;
+
+                    let explicitMeetsOutdoorWater = null;
+                    if (meetsOutdoorWaterIdx !== -1) {
+                        const val = String(row[meetsOutdoorWaterIdx] || "").trim().toLowerCase();
+                        if (val.startsWith("y")) explicitMeetsOutdoorWater = true;
+                        if (val.startsWith("n")) explicitMeetsOutdoorWater = false;
+                    }
+                    const calculatedMeetsOutdoorWater = (outdoorWaterReduction ?? 0) > 0.50;
+                    const meetsOutdoorWaterGoal = explicitMeetsOutdoorWater !== null ? explicitMeetsOutdoorWater : calculatedMeetsOutdoorWater;
+
+                    // LPD Explicit Check
+                    const meetsLpdIdx = [
+                        findColIndex(mainHeaderRow, "Meet 2030 LPD"),
+                        findColIndex(subHeaderRow, "Meet 2030 LPD"),
+                        findColIndex(mainHeaderRow, "2030 LPD Goal"),
+                        findColIndex(subHeaderRow, "2030 LPD Goal")
+                    ].find(idx => idx !== -1) ?? -1;
+
+                    let explicitMeetsLpd = null;
+                    if (meetsLpdIdx !== -1) {
+                        const val = String(row[meetsLpdIdx] || "").trim().toLowerCase();
+                        if (val.startsWith("y")) explicitMeetsLpd = true;
+                        if (val.startsWith("n")) explicitMeetsLpd = false;
+                    }
+                    const calculatedMeetsLpd = (lpdReduction ?? 0) >= 0.25;
+                    const meetsLpdGoal = explicitMeetsLpd !== null ? explicitMeetsLpd : calculatedMeetsLpd;
+
+
                     // isEligible boolean derives from status
                     const isEligible = eligibilityStatus === "Yes";
 
@@ -353,13 +443,15 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
 
                         resilience: {
                             euiReduction: euiReduction,
-                            meets2030Goal: euiReduction >= 0.80,
+                            meets2030Goal: meets2030Goal,
                             operationalCarbonReduction: getNumber(row[opCarbonIdx]), // Placeholder if column exists
                             embodiedCarbonPathway: String(row[embodiedCarbonIdx] || "TBD"),
                             indoorWaterReduction: waterReduction,
                             outdoorWaterReduction: outdoorWaterReduction,
+                            meetsOutdoorWaterGoal: meetsOutdoorWaterGoal,
                             lpdReduction: lpdReduction,
-                            meetsWaterGoal: waterReduction >= 0.40,
+                            meetsLpdGoal: meetsLpdGoal,
+                            meetsWaterGoal: meetsWaterGoal,
                             ecologyScore: getScore(row[ecologyIdx]),
                             resilienceScore: getScore(row[resilienceIdx]),
                         },

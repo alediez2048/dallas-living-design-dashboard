@@ -1,10 +1,13 @@
 import { ReactNode } from 'react';
 import { useData } from '../context/DataContext';
-import { LayoutDashboard, Leaf, Activity, LogOut } from 'lucide-react';
+import { LayoutDashboard, Leaf, Activity, LogOut, BookOpen } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { LegendModal } from './LegendModal';
+import { useState } from 'react';
 
 export const DashboardLayout = ({ children }: { children: ReactNode }) => {
     const { isLoading, projects, resetData, isDemoMode } = useData();
+    const [isLegendOpen, setIsLegendOpen] = useState(false);
 
     // If no data is loaded, show minimal header with theme toggle and upload screen
     if (projects.length === 0 && !isLoading) {
@@ -40,6 +43,13 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
                 <nav className="flex-1 px-4 space-y-2 mt-4">
                     <SidebarItem icon={<LayoutDashboard size={20} />} label="Overview" active />
+                    <button
+                        onClick={() => setIsLegendOpen(true)}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5"
+                    >
+                        <BookOpen size={20} />
+                        Legend
+                    </button>
                 </nav>
 
                 <div className="p-4 border-t border-gray-200 dark:border-white/5">
@@ -69,6 +79,8 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
                     {children}
                 </div>
             </main>
+
+            <LegendModal isOpen={isLegendOpen} onClose={() => setIsLegendOpen(false)} />
         </div>
     );
 };
