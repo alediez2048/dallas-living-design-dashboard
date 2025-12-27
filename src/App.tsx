@@ -7,7 +7,8 @@ import { ProjectListModal } from './components/ProjectListModal'
 import { ProjectMetrics } from './types'
 
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 // Inner component to access context
 interface MetricCardProps {
@@ -41,6 +42,9 @@ const DashboardContent = () => {
   const [activeSector, setActiveSector] = useState<string>("All Sectors");
   const [hoveredProject, setHoveredProject] = useState<string | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<{ title: string, projects: ProjectMetrics[] } | null>(null);
+  const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
+  const [isArchExpanded, setIsArchExpanded] = useState(true);
+  const [isIntExpanded, setIsIntExpanded] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
 
   // Define the explicit tabs request
@@ -112,123 +116,199 @@ const DashboardContent = () => {
         {/* Top Row: Counters & Goals - Split by Arch vs Int */}
 
         {/* Projects Overview */}
-        <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white flex items-center gap-2">
-          <span className="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
-          Projects Overview
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <motion.div
-            variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
-            className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm dark:shadow-none cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-            onClick={() => setSelectedMetric({ title: "Total Projects", projects: filteredProjects })}
+        <div className="mb-8">
+          <button
+            onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
+            className="flex items-center gap-2 mb-3 w-full text-left group hover:opacity-80 transition-opacity"
           >
-            <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Total Projects</h3>
-            <div className="flex items-baseline gap-2">
-              <p className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-200 bg-clip-text text-transparent">
-                {filteredProjects.length}
-              </p>
-              <span className="text-xs text-gray-500 uppercase tracking-wider">All</span>
-            </div>
-          </motion.div>
+            {isProjectsExpanded ? <ChevronDown className="w-6 h-6 text-gray-400 dark:text-gray-500" /> : <ChevronRight className="w-6 h-6 text-gray-400 dark:text-gray-500" />}
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+              <span className="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
+              Projects Overview
+            </h3>
+          </button>
+          <motion.div
+            initial={false}
+            animate={{ height: isProjectsExpanded ? "auto" : 0, opacity: isProjectsExpanded ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
+              <motion.div
+                variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
+                className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm dark:shadow-none cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                onClick={() => setSelectedMetric({ title: "Total Projects", projects: filteredProjects })}
+              >
+                <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Total Projects</h3>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-200 bg-clip-text text-transparent">
+                    {filteredProjects.length}
+                  </p>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">All</span>
+                </div>
+              </motion.div>
 
-          <motion.div
-            variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
-            className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm dark:shadow-none cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-            onClick={() => setSelectedMetric({ title: "Total Eligible Projects", projects: filteredProjects.filter(p => p.isEligible) })}
-          >
-            <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Total Eligible</h3>
-            <div className="flex items-baseline gap-2">
-              <p className="text-5xl font-bold bg-gradient-to-r from-gray-700 to-gray-400 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-                {filteredProjects.filter(p => p.isEligible).length}
-              </p>
-              <span className="text-xs text-gray-500 uppercase tracking-wider">Projects</span>
+              <motion.div
+                variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
+                className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm dark:shadow-none cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                onClick={() => setSelectedMetric({ title: "Total Eligible Projects", projects: filteredProjects.filter(p => p.isEligible) })}
+              >
+                <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Total Eligible</h3>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-5xl font-bold bg-gradient-to-r from-gray-700 to-gray-400 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                    {filteredProjects.filter(p => p.isEligible).length}
+                  </p>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">Projects</span>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
 
         {/* Architecture Overview */}
         <div className="mb-6">
-          <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white flex items-center gap-2">
-            <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
-            Architecture Overview
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <MetricCard
-              label="Meeting 2030 EUI Goal"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meets2030Goal)}
-              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
-              color="from-green-500 to-green-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-            <MetricCard
-              label="Meeting Indoor Water Goal"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsWaterGoal)}
-              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
-              color="from-blue-500 to-blue-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-            {/* Outdoor Water - assume > 50% or non-null if data is sparse? checking for 50% */}
-            <MetricCard
-              label="Meeting Outdoor Water Goal"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsOutdoorWaterGoal)}
-              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
-              color="from-cyan-500 to-cyan-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-            <MetricCard
-              label="Switch List Vetted"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.health.switchListVetted)}
-              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
-              color="from-amber-500 to-amber-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-            <MetricCard
-              label="Tracking Embodied Carbon"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
-              total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
-              color="from-emerald-500 to-emerald-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-          </div>
+          <button
+            onClick={() => setIsArchExpanded(!isArchExpanded)}
+            className="flex items-center gap-2 mb-3 w-full text-left group hover:opacity-80 transition-opacity"
+          >
+            {isArchExpanded ? <ChevronDown className="w-6 h-6 text-gray-400 dark:text-gray-500" /> : <ChevronRight className="w-6 h-6 text-gray-400 dark:text-gray-500" />}
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+              <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
+              Architecture Overview
+            </h3>
+          </button>
+
+          <motion.div
+            initial={false}
+            animate={{ height: isArchExpanded ? "auto" : 0, opacity: isArchExpanded ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            {/* Row 1: Totals */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <MetricCard
+                label="Total Architecture Projects"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture')}
+                color="from-purple-600 to-purple-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Total Eligible Architecture Projects"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
+                color="from-purple-500 to-purple-300"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+            </div>
+
+            {/* Row 2: Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-2">
+              <MetricCard
+                label="Meeting 2030 EUI Goal"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meets2030Goal)}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+                color="from-green-500 to-green-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Meeting Indoor Water Goal"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsWaterGoal)}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+                color="from-blue-500 to-blue-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Meeting Outdoor Water Goal"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsOutdoorWaterGoal)}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+                color="from-cyan-500 to-cyan-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Switch List Vetted"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.health.switchListVetted)}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+                color="from-amber-500 to-amber-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Tracking Embodied Carbon"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture').length}
+                color="from-emerald-500 to-emerald-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+            </div>
+          </motion.div>
         </div>
 
         {/* Interiors Overview */}
+        {/* Interiors Overview */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white flex items-center gap-2">
-            <span className="w-1.5 h-6 bg-teal-500 rounded-full"></span>
-            Interiors Overview
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* LPD - assume > 10% for now if data is sparse, or strictly verify goal later */}
-            <MetricCard
-              label="Meeting LPD 2030 Goal"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsLpdGoal && p.isEligible)}
-              total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
-              color="from-yellow-500 to-yellow-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-            <MetricCard
-              label="Meeting Indoor Water Goal"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsWaterGoal)}
-              total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
-              color="from-blue-500 to-blue-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-            <MetricCard
-              label="Tracking Embodied Carbon"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
-              total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
-              color="from-emerald-500 to-emerald-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-            <MetricCard
-              label="Switch List Vetted"
-              projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.health.switchListVetted)}
-              total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
-              color="from-amber-500 to-amber-400"
-              onClick={(title, projects) => setSelectedMetric({ title, projects })}
-            />
-          </div>
+          <button
+            onClick={() => setIsIntExpanded(!isIntExpanded)}
+            className="flex items-center gap-2 mb-3 w-full text-left group hover:opacity-80 transition-opacity"
+          >
+            {isIntExpanded ? <ChevronDown className="w-6 h-6 text-gray-400 dark:text-gray-500" /> : <ChevronRight className="w-6 h-6 text-gray-400 dark:text-gray-500" />}
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+              <span className="w-1.5 h-6 bg-teal-500 rounded-full"></span>
+              Interiors Overview
+            </h3>
+          </button>
+
+          <motion.div
+            initial={false}
+            animate={{ height: isIntExpanded ? "auto" : 0, opacity: isIntExpanded ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            {/* Row 1: Totals */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <MetricCard
+                label="Total Interior Projects"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors')}
+                color="from-teal-600 to-teal-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Total Eligible Interior Projects"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
+                color="from-teal-500 to-teal-300"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+            </div>
+
+            {/* Row 2: Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
+              <MetricCard
+                label="Meeting LPD 2030 Goal"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsLpdGoal && p.isEligible)}
+                total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+                color="from-yellow-500 to-yellow-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Meeting Indoor Water Goal"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsWaterGoal)}
+                total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+                color="from-blue-500 to-blue-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Tracking Embodied Carbon"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
+                total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+                color="from-emerald-500 to-emerald-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+              <MetricCard
+                label="Switch List Vetted"
+                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.health.switchListVetted)}
+                total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+                color="from-amber-500 to-amber-400"
+                onClick={(title, projects) => setSelectedMetric({ title, projects })}
+              />
+            </div>
+          </motion.div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
