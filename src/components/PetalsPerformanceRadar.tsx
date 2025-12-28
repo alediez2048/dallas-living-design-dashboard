@@ -5,9 +5,11 @@ import { useTheme } from '../context/ThemeContext';
 
 interface PetalsPerformanceRadarProps {
     projects: ProjectMetrics[];
+    width?: number;
+    height?: number;
 }
 
-export const PetalsPerformanceRadar = ({ projects }: PetalsPerformanceRadarProps) => {
+export const PetalsPerformanceRadar = ({ projects, width, height }: PetalsPerformanceRadarProps) => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -43,7 +45,10 @@ export const PetalsPerformanceRadar = ({ projects }: PetalsPerformanceRadarProps
     }, [projects]);
 
     return (
-        <div className="h-[400px] w-full bg-white dark:bg-[#1e1e1e] rounded-2xl border border-gray-200 dark:border-white/5 p-4 flex flex-col items-center justify-center relative shadow-sm dark:shadow-none transition-colors duration-300">
+        <div
+            className={`bg-white dark:bg-[#1e1e1e] rounded-2xl border border-gray-200 dark:border-white/5 p-4 flex flex-col items-center justify-center relative shadow-sm dark:shadow-none transition-colors duration-300 ${width ? '' : 'h-[400px] w-full'}`}
+            style={width && height ? { width, height } : undefined}
+        >
             <h3 className="text-gray-500 dark:text-gray-400 font-medium absolute top-6 left-6">Petals Performance Average</h3>
 
             <ResponsiveContainer width="100%" height="100%">
@@ -58,6 +63,7 @@ export const PetalsPerformanceRadar = ({ projects }: PetalsPerformanceRadarProps
                         strokeWidth={3}
                         fill="#8b5cf6"
                         fillOpacity={0.3}
+                        isAnimationActive={!width}
                     />
                     <Tooltip
                         contentStyle={{

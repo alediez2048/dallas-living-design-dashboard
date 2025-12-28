@@ -6,37 +6,18 @@ import { PetalsPerformanceRadar } from './components/PetalsPerformanceRadar'
 import { GoalTracker } from './components/GoalTracker'
 import { ProjectListModal } from './components/ProjectListModal'
 import { ProjectMetrics } from './types'
+import { MetricCard } from './components/MetricCard'
+import { FullReport } from './components/Report/FullReport'
+import { useReactToPrint } from 'react-to-print'
+import { useRef } from 'react'
+import { Download } from 'lucide-react'
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 // Inner component to access context
-interface MetricCardProps {
-  label: string;
-  projects: ProjectMetrics[];
-  total?: number;
-  color: string;
-  onClick: (title: string, projects: ProjectMetrics[]) => void;
-}
 
-const MetricCard = ({ label, projects, total, color, onClick }: MetricCardProps) => (
-  <motion.div
-    variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
-    className="p-5 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm dark:shadow-none h-full cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-    onClick={() => onClick(label, projects)}
-  >
-    <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium text-sm h-10 flex items-center">{label}</h3>
-    <div className="flex items-baseline gap-2">
-      <p className={`text-4xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
-        {projects.length}
-      </p>
-      {total !== undefined && (
-        <span className="text-xs text-gray-500 uppercase tracking-wider">/ {total}</span>
-      )}
-    </div>
-  </motion.div>
-);
 
 const DashboardContent = () => {
   const { projects, logs } = useData();
@@ -47,6 +28,12 @@ const DashboardContent = () => {
   const [isArchExpanded, setIsArchExpanded] = useState(true);
   const [isIntExpanded, setIsIntExpanded] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
+
+  const componentRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: 'Dallas Living Design Dashboard Report',
+  });
 
   // Define the explicit tabs request
   const TABS = [
@@ -105,6 +92,20 @@ const DashboardContent = () => {
             {tab.label}
           </button>
         ))}
+      </div>
+
+      <div className="absolute top-24 right-8">
+        <button
+          onClick={() => handlePrint()}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
+        >
+          <Download size={16} />
+          Download Report
+        </button>
+      </div>
+
+      <div style={{ position: 'fixed', top: 0, left: '-10000px', width: '1000px' }}>
+        <FullReport ref={componentRef} projects={projects} />
       </div>
 
       <motion.div
