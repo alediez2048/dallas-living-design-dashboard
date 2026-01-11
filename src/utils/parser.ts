@@ -102,6 +102,17 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 if (lpdIdx !== -1) logs.push(`Found LPD Column at index ${lpdIdx}`);
                 else logs.push("LPD Column NOT found");
 
+                // EUI Guidance Level
+                let euiGuidanceIdx = findColIndex(mainHeaderRow, "Level EUI Guidance");
+                if (euiGuidanceIdx === -1) euiGuidanceIdx = findColIndex(subHeaderRow, "Level EUI Guidance");
+                if (euiGuidanceIdx === -1) euiGuidanceIdx = findColIndex(mainHeaderRow, "EUI Level");
+                if (euiGuidanceIdx === -1) euiGuidanceIdx = findColIndex(subHeaderRow, "EUI Level");
+                if (euiGuidanceIdx === -1) euiGuidanceIdx = findColIndex(mainHeaderRow, "EUI Guidance");
+                if (euiGuidanceIdx === -1) euiGuidanceIdx = findColIndex(subHeaderRow, "EUI Guidance");
+
+                if (euiGuidanceIdx !== -1) logs.push(`Found EUI Guidance Level Column at index ${euiGuidanceIdx}`);
+                else logs.push("EUI Guidance Level Column NOT found");
+
                 // Ecology & Resilience Scores (Row 2)
                 const ecologyIdx = findColIndex(mainHeaderRow, "Ecology");
                 const resilienceIdx = findColIndex(mainHeaderRow, "Resilience - 1~3");
@@ -469,6 +480,15 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                             if (val.toLowerCase() === 'a' || val.toLowerCase() === 'architecture') return "Architecture";
                             if (val.toLowerCase() === 'i' || val.toLowerCase() === 'interiors') return "Interiors";
                             return val || "Unknown";
+                        })(),
+                        euiGuidanceLevel: (() => {
+                            if (euiGuidanceIdx === -1) return null;
+                            const val = row[euiGuidanceIdx];
+                            if (val === null || val === undefined || val === '') return null;
+                            const num = typeof val === 'number' ? val : parseInt(String(val).trim());
+                            // Validate it's a level 1-5
+                            if (!isNaN(num) && num >= 1 && num <= 5) return num;
+                            return null;
                         })(),
 
                         resilience: {

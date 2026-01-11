@@ -57,6 +57,9 @@ export const generateSampleData = (): ProjectMetrics[] => {
             archVsInt: Math.random() > 0.5 ? 'Architecture' : 'Interiors',
             isEligible: eligibilityStatus === 'Yes',
             eligibilityStatus,
+            euiGuidanceLevel: Math.random() > 0.5
+                ? Math.floor(Math.random() * 5) + 1 as 1 | 2 | 3 | 4 | 5
+                : null, // Random level 1-5 or null
 
             resilience: {
                 euiReduction,
