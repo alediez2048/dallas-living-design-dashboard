@@ -97,6 +97,7 @@ export const PetalRadar = ({ projects, width, height }: PetalRadarProps) => {
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
                         itemStyle={{ color: '#60a5fa' }}
+                        formatter={(value: number) => `${value.toFixed(1)}%`}
                     />
                 </RadarChart>
             </ResponsiveContainer>

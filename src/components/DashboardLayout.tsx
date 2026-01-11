@@ -1,13 +1,18 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useData } from '../context/DataContext';
-import { LayoutDashboard, Leaf, Activity, LogOut, BookOpen } from 'lucide-react';
+import { LayoutDashboard, LogOut, BookOpen } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { LegendModal } from './LegendModal';
-import { useState } from 'react';
+import { LegendView } from './LegendView';
 
-export const DashboardLayout = ({ children }: { children: ReactNode }) => {
+type ViewType = 'overview' | 'legend';
+
+interface DashboardLayoutProps {
+    children: ReactNode;
+}
+
+export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const { isLoading, projects, resetData, isDemoMode } = useData();
-    const [isLegendOpen, setIsLegendOpen] = useState(false);
+    const [activeView, setActiveView] = useState<ViewType>('overview');
 
     // If no data is loaded, show minimal header with theme toggle and upload screen
     if (projects.length === 0 && !isLoading) {
@@ -21,6 +26,15 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
             </main>
         );
     }
+
+    const getPageTitle = () => {
+        switch (activeView) {
+            case 'legend':
+                return 'Legend & Definitions';
+            default:
+                return 'Overview';
+        }
+    };
 
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-white font-sans overflow-hidden">
@@ -42,14 +56,18 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 mt-4">
-                    <SidebarItem icon={<LayoutDashboard size={20} />} label="Overview" active />
-                    <button
-                        onClick={() => setIsLegendOpen(true)}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5"
-                    >
-                        <BookOpen size={20} />
-                        Legend
-                    </button>
+                    <SidebarItem
+                        icon={<LayoutDashboard size={20} />}
+                        label="Overview"
+                        active={activeView === 'overview'}
+                        onClick={() => setActiveView('overview')}
+                    />
+                    <SidebarItem
+                        icon={<BookOpen size={20} />}
+                        label="Legend"
+                        active={activeView === 'legend'}
+                        onClick={() => setActiveView('legend')}
+                    />
                 </nav>
 
                 <div className="p-4 border-t border-gray-200 dark:border-white/5">
@@ -66,7 +84,7 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto relative">
                 <header className="sticky top-0 z-10 bg-white/80 dark:bg-[#121212]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 px-8 py-5 flex justify-between items-center transition-colors duration-300">
-                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Overview</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{getPageTitle()}</h1>
                     <div className="flex items-center gap-4">
                         <div className="hidden md:block bg-gray-100 dark:bg-[#1e1e1e] px-4 py-1.5 rounded-full border border-gray-200 dark:border-white/10 text-sm text-gray-500 dark:text-gray-400">
                             {projects.length} Projects {isDemoMode && '(Demo)'}
@@ -76,23 +94,32 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
                 </header>
 
                 <div className="p-8">
-                    {children}
+                    {activeView === 'overview' && children}
+                    {activeView === 'legend' && <LegendView />}
                 </div>
             </main>
-
-            <LegendModal isOpen={isLegendOpen} onClose={() => setIsLegendOpen(false)} />
         </div>
     );
 };
 
-const SidebarItem = ({ icon, label, active = false }: { icon: ReactNode, label: string, active?: boolean }) => (
-    <button className={`
-        w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
-        ${active
-            ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400'
-            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
-        }
-    `}>
+interface SidebarItemProps {
+    icon: ReactNode;
+    label: string;
+    active?: boolean;
+    onClick?: () => void;
+}
+
+const SidebarItem = ({ icon, label, active = false, onClick }: SidebarItemProps) => (
+    <button
+        onClick={onClick}
+        className={`
+            w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
+            ${active
+                ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
+            }
+        `}
+    >
         {icon}
         {label}
     </button>
