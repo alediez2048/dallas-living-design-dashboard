@@ -31,7 +31,7 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
             {/* PAGE 1: METRICS OVERVIEW */}
             <div className="w-full h-screen p-12 flex flex-col bg-white text-black print:block relative" style={{ pageBreakAfter: 'always' }}>
                 {/* Header */}
-                <div className="flex justify-between items-end mb-8 border-b-2 border-gray-800 pb-4">
+                <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4">
                     <h1 className="text-4xl font-bold uppercase tracking-tight text-gray-900">{title}</h1>
                     <div className="text-right">
                         <span className="block text-sm text-gray-500 font-medium">Living Design Dashboard Report</span>
@@ -40,7 +40,7 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                 </div>
 
                 {/* Main Metrics */}
-                <div className="grid grid-cols-4 gap-6 mb-12 h-32">
+                <div className="grid grid-cols-4 gap-4 mb-6 h-28">
                     <MetricCard
                         label="Total Projects"
                         projects={projects}
@@ -50,31 +50,63 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                     <MetricCard
                         label="Eligible Projects"
                         projects={eligibleProjects}
-                        total={projects.length}
                         color="from-green-600 to-emerald-500"
                         onClick={() => { }}
                     />
                     <div className="col-span-2"></div>
                 </div>
 
-                {/* Breakdowns */}
-                <div className="grid grid-cols-2 gap-12">
-                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 h-64 flex flex-col justify-center">
-                        <h4 className="text-lg font-bold mb-6 uppercase text-gray-500 tracking-wider">Architecture Overview</h4>
-                        <div className="grid grid-cols-2 gap-6 h-32">
-                            <MetricCard label="Total Arch" projects={archProjects} color="from-orange-500 to-red-500" onClick={() => { }} />
-                            <MetricCard label="Eligible Arch" projects={eligibleArch} total={archProjects.length} color="from-orange-400 to-pink-500" onClick={() => { }} />
+                {/* Architecture & Interiors Breakdowns */}
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                    {archProjects.length > 0 && (
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <h4 className="text-sm font-bold mb-3 uppercase text-purple-600 tracking-wider">Architecture Overview</h4>
+                            <div className="grid grid-cols-2 gap-3 h-24 mb-3">
+                                <MetricCard label="Total Arch" projects={archProjects} color="from-purple-600 to-purple-400" onClick={() => { }} compact />
+                                <MetricCard label="Eligible" projects={eligibleArch} color="from-purple-500 to-purple-300" onClick={() => { }} compact />
+                            </div>
+                            {/* Architecture Metrics Row */}
+                            <div className="grid grid-cols-5 gap-2 h-20">
+                                <MetricCard label="EUI" projects={archProjects.filter(p => p.resilience.meets2030Goal)} total={archProjects.length} color="from-purple-500 to-purple-400" onClick={() => { }} compact />
+                                <MetricCard label="In. H2O" projects={archProjects.filter(p => p.resilience.meetsWaterGoal)} total={archProjects.length} color="from-purple-500 to-purple-400" onClick={() => { }} compact />
+                                <MetricCard label="Out. H2O" projects={archProjects.filter(p => p.resilience.meetsOutdoorWaterGoal)} total={archProjects.length} color="from-purple-500 to-purple-400" onClick={() => { }} compact />
+                                <MetricCard label="Switch" projects={archProjects.filter(p => p.health.switchListVetted)} total={archProjects.length} color="from-purple-500 to-purple-400" onClick={() => { }} compact />
+                                <MetricCard label="Emb. C" projects={archProjects.filter(p => p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')} total={archProjects.length} color="from-purple-500 to-purple-400" onClick={() => { }} compact />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 h-64 flex flex-col justify-center">
-                        <h4 className="text-lg font-bold mb-6 uppercase text-gray-500 tracking-wider">Interiors Overview</h4>
-                        <div className="grid grid-cols-2 gap-6 h-32">
-                            <MetricCard label="Total Int" projects={intProjects} color="from-purple-500 to-indigo-500" onClick={() => { }} />
-                            <MetricCard label="Eligible Int" projects={eligibleInt} total={intProjects.length} color="from-purple-400 to-blue-500" onClick={() => { }} />
+                    {intProjects.length > 0 && (
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <h4 className="text-sm font-bold mb-3 uppercase text-teal-600 tracking-wider">Interiors Overview</h4>
+                            <div className="grid grid-cols-2 gap-3 h-24 mb-3">
+                                <MetricCard label="Total Int" projects={intProjects} color="from-teal-600 to-teal-400" onClick={() => { }} compact />
+                                <MetricCard label="Eligible" projects={eligibleInt} color="from-teal-500 to-teal-300" onClick={() => { }} compact />
+                            </div>
+                            {/* Interiors Metrics Row */}
+                            <div className="grid grid-cols-4 gap-2 h-20">
+                                <MetricCard label="LPD" projects={intProjects.filter(p => p.resilience.meetsLpdGoal)} total={intProjects.length} color="from-teal-500 to-teal-400" onClick={() => { }} compact />
+                                <MetricCard label="In. H2O" projects={intProjects.filter(p => p.resilience.meetsWaterGoal)} total={intProjects.length} color="from-teal-500 to-teal-400" onClick={() => { }} compact />
+                                <MetricCard label="Switch" projects={intProjects.filter(p => p.health.switchListVetted)} total={intProjects.length} color="from-teal-500 to-teal-400" onClick={() => { }} compact />
+                                <MetricCard label="Emb. C" projects={intProjects.filter(p => p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')} total={intProjects.length} color="from-teal-500 to-teal-400" onClick={() => { }} compact />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* EUI Guidance Levels (Architecture Only) */}
+                {archProjects.length > 0 && (
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <h4 className="text-sm font-bold mb-3 uppercase text-gray-600 tracking-wider">EUI Guidance Levels (Architecture)</h4>
+                        <div className="grid grid-cols-5 gap-3 h-20">
+                            <MetricCard label="Level 1 (Nat'l Avg)" projects={archProjects.filter(p => p.euiGuidanceLevel === 1)} total={archProjects.length} color="from-red-500 to-red-400" onClick={() => { }} compact />
+                            <MetricCard label="Level 2 (BAU)" projects={archProjects.filter(p => p.euiGuidanceLevel === 2)} total={archProjects.length} color="from-orange-500 to-orange-400" onClick={() => { }} compact />
+                            <MetricCard label="Level 3 (Baseline)" projects={archProjects.filter(p => p.euiGuidanceLevel === 3)} total={archProjects.length} color="from-yellow-500 to-yellow-400" onClick={() => { }} compact />
+                            <MetricCard label="Level 4 (Good)" projects={archProjects.filter(p => p.euiGuidanceLevel === 4)} total={archProjects.length} color="from-lime-500 to-lime-400" onClick={() => { }} compact />
+                            <MetricCard label="Level 5 (Excellent)" projects={archProjects.filter(p => p.euiGuidanceLevel === 5)} total={archProjects.length} color="from-green-500 to-green-400" onClick={() => { }} compact />
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Footer Page 1 */}
                 <div className="absolute bottom-8 left-0 w-full text-center text-xs text-gray-400">

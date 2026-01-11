@@ -285,75 +285,76 @@ const DashboardContent = () => {
           </motion.div>
         </div>
 
-        {/* Interiors Overview */}
-        {/* Interiors Overview */}
-        <div className="mb-8">
-          <button
-            onClick={() => setIsIntExpanded(!isIntExpanded)}
-            className="flex items-center gap-2 mb-3 w-full text-left group hover:opacity-80 transition-opacity"
-          >
-            {isIntExpanded ? <ChevronDown className="w-6 h-6 text-gray-400 dark:text-gray-500" /> : <ChevronRight className="w-6 h-6 text-gray-400 dark:text-gray-500" />}
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-teal-500 rounded-full"></span>
-              Interiors Overview
-            </h3>
-          </button>
+        {/* Interiors Overview - hide when no interiors projects */}
+        {filteredProjects.filter(p => p.archVsInt === 'Interiors').length > 0 && (
+          <div className="mb-8">
+            <button
+              onClick={() => setIsIntExpanded(!isIntExpanded)}
+              className="flex items-center gap-2 mb-3 w-full text-left group hover:opacity-80 transition-opacity"
+            >
+              {isIntExpanded ? <ChevronDown className="w-6 h-6 text-gray-400 dark:text-gray-500" /> : <ChevronRight className="w-6 h-6 text-gray-400 dark:text-gray-500" />}
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                <span className="w-1.5 h-6 bg-teal-500 rounded-full"></span>
+                Interiors Overview
+              </h3>
+            </button>
 
-          <motion.div
-            initial={false}
-            animate={{ height: isIntExpanded ? "auto" : 0, opacity: isIntExpanded ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            {/* Row 1: Totals */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <MetricCard
-                label="Total Interior Projects"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors')}
-                color="from-teal-600 to-teal-400"
-                onClick={(title, projects) => setSelectedMetric({ title, projects })}
-              />
-              <MetricCard
-                label="Total Eligible Interior Projects"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
-                color="from-teal-500 to-teal-300"
-                onClick={(title, projects) => setSelectedMetric({ title, projects })}
-              />
-            </div>
+            <motion.div
+              initial={false}
+              animate={{ height: isIntExpanded ? "auto" : 0, opacity: isIntExpanded ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              {/* Row 1: Totals */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <MetricCard
+                  label="Total Interior Projects"
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors')}
+                  color="from-teal-600 to-teal-400"
+                  onClick={(title, projects) => setSelectedMetric({ title, projects })}
+                />
+                <MetricCard
+                  label="Total Eligible Interior Projects"
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
+                  color="from-teal-500 to-teal-300"
+                  onClick={(title, projects) => setSelectedMetric({ title, projects })}
+                />
+              </div>
 
-            {/* Row 2: Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
-              <MetricCard
-                label="Meeting LPD 2030 Goal"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsLpdGoal && p.isEligible)}
-                total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
-                color="from-teal-500 to-teal-400"
-                onClick={(title, projects) => setSelectedMetric({ title, projects })}
-              />
-              <MetricCard
-                label="Meeting Indoor Water Goal"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsWaterGoal)}
-                total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
-                color="from-teal-500 to-teal-400"
-                onClick={(title, projects) => setSelectedMetric({ title, projects })}
-              />
-              <MetricCard
-                label="Tracking Embodied Carbon"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
-                total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
-                color="from-teal-500 to-teal-400"
-                onClick={(title, projects) => setSelectedMetric({ title, projects })}
-              />
-              <MetricCard
-                label="Switch List Vetted"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.health.switchListVetted)}
-                total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
-                color="from-teal-500 to-teal-400"
-                onClick={(title, projects) => setSelectedMetric({ title, projects })}
-              />
-            </div>
-          </motion.div>
-        </div>
+              {/* Row 2: Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
+                <MetricCard
+                  label="Meeting LPD 2030 Goal"
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsLpdGoal && p.isEligible)}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+                  color="from-teal-500 to-teal-400"
+                  onClick={(title, projects) => setSelectedMetric({ title, projects })}
+                />
+                <MetricCard
+                  label="Meeting Indoor Water Goal"
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsWaterGoal)}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+                  color="from-teal-500 to-teal-400"
+                  onClick={(title, projects) => setSelectedMetric({ title, projects })}
+                />
+                <MetricCard
+                  label="Tracking Embodied Carbon"
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+                  color="from-teal-500 to-teal-400"
+                  onClick={(title, projects) => setSelectedMetric({ title, projects })}
+                />
+                <MetricCard
+                  label="Switch List Vetted"
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.health.switchListVetted)}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors').length}
+                  color="from-teal-500 to-teal-400"
+                  onClick={(title, projects) => setSelectedMetric({ title, projects })}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Radar Charts */}
