@@ -185,74 +185,35 @@ export const LegendView: React.FC = () => {
                 </div>
             </motion.section>
 
-            {/* Section: Metric Rules */}
-            <motion.section variants={itemVariants} id="metric-rules">
+            {/* Section: PW Targets */}
+            <motion.section variants={itemVariants} id="pw-targets">
                 <div className="flex items-center gap-2 mb-4 md:mb-6">
                     <Ruler className="w-5 h-5 md:w-6 md:h-6 text-green-500" />
                     <h2 className="text-lg md:text-xl xl:text-2xl font-bold text-gray-900 dark:text-white">
-                        Metric Rules
-                    </h2>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-                    <div className="p-4 md:p-5 xl:p-6 rounded-xl bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-white/10">
-                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base md:text-lg">Meeting 2030 EUI Goal</h4>
-                        <ul className="list-disc pl-5 space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                            <li><strong>Primary Check:</strong> Looks for column "Meet 2030" or "2030 Goal". Uses Yes/No value.</li>
-                            <li><strong>Calculation Fallback:</strong> (Baseline EUI - Predicted EUI) / Baseline EUI ≥ 80%.</li>
-                            <li><strong>Missing Data:</strong> Empty cells for Predicted EUI are treated as missing (0% reduction), NOT as Net Zero (100% reduction).</li>
-                        </ul>
-                    </div>
-
-                    <div className="p-4 md:p-5 xl:p-6 rounded-xl bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-white/10">
-                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base md:text-lg">Meeting Indoor Water Goal</h4>
-                        <ul className="list-disc pl-5 space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                            <li><strong>Primary Check:</strong> Looks for column "Meets indoor Water Commitment", "Water Commitment", or similar.</li>
-                            <li><strong>Calculation Fallback:</strong> Indoor Water Use Reduction ≥ 40%.</li>
-                        </ul>
-                    </div>
-
-                    <div className="p-4 md:p-5 xl:p-6 rounded-xl bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-white/10 lg:col-span-2 xl:col-span-1">
-                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base md:text-lg">Other Metric Targets</h4>
-                        <ul className="list-disc pl-5 space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                            <li><strong>Outdoor Water:</strong> Priority Check: "Meets PW Outdoor Water Commitment" (Yes/No). Fallback: Reduction &gt; 50%.</li>
-                            <li><strong>LPD 2030 Goal:</strong> Must be <strong>Eligible</strong>. Check: "Meet 2030 LPD" (Yes/No). Fallback: ≥ 25%.</li>
-                            <li><strong>Embodied Carbon:</strong> Tracks if pathway is defined (not "N/A", "TBD", or "No").</li>
-                        </ul>
-                    </div>
-                </div>
-            </motion.section>
-
-            {/* Section: Categorization */}
-            <motion.section variants={itemVariants} id="categorization">
-                <div className="flex items-center gap-2 mb-4 md:mb-6">
-                    <Layers className="w-5 h-5 md:w-6 md:h-6 text-orange-500" />
-                    <h2 className="text-lg md:text-xl xl:text-2xl font-bold text-gray-900 dark:text-white">
-                        Categorization
+                        PW Targets
                     </h2>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                     <div className="p-4 md:p-5 xl:p-6 rounded-xl bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-white/10">
-                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base md:text-lg">Project Sectors</h4>
-                        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-3">The dashboard attempts to identify the sector in the following order:</p>
-                        <ol className="list-decimal pl-5 space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                            <li><strong>Sector Column:</strong> Explicit value in the "Sector" column.</li>
-                            <li><strong>Name Detection:</strong> Keywords in the Project Name (e.g., "School" → K12, "HCA" → Healthcare HCA).</li>
-                        </ol>
+                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base md:text-lg">Meeting 2030 EUI Goal</h4>
+                        <ul className="list-disc pl-5 space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                            <li>80% EUI Reduction target</li>
+                            <li>25% LPD Reduction target</li>
+                        </ul>
                     </div>
 
                     <div className="p-4 md:p-5 xl:p-6 rounded-xl bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-white/10">
-                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base md:text-lg">Architecture vs. Interiors</h4>
-                        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-3">Determined by the <strong>"Arch vs Int"</strong> column:</p>
+                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base md:text-lg">Water</h4>
                         <ul className="list-disc pl-5 space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                            <li><strong>Architecture:</strong> "A", "Architecture" (case-insensitive).</li>
-                            <li><strong>Interiors:</strong> "I", "Interiors" (case-insensitive).</li>
-                            <li><strong>Unknown:</strong> Any other value (not displayed in specific overview panels).</li>
+                            <li>40% Indoor water reduction target</li>
+                            <li>30% Outdoor water reduction target</li>
                         </ul>
                     </div>
                 </div>
             </motion.section>
+
+
 
             {/* Bottom Spacer */}
             <div className="h-8" />

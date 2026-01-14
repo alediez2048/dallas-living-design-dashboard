@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { LayoutDashboard, LogOut, BookOpen } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LegendView } from './LegendView';
+import perkinsWillLogo from '../assets/perkins-will-logo.jpeg';
 
 type ViewType = 'overview' | 'legend';
 
@@ -41,6 +42,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             {/* Sidebar */}
             <aside className="w-64 bg-white dark:bg-[#1e1e1e] border-r border-gray-200 dark:border-white/5 flex flex-col transition-colors duration-300">
                 <div className="p-6">
+                    <img
+                        src={perkinsWillLogo}
+                        alt="Perkins&Will"
+                        className="h-6 w-auto mb-4 dark:invert"
+                    />
                     <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-400 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
                         Living Design
                     </h2>
