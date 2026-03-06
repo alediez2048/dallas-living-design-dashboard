@@ -42,16 +42,19 @@ export const PetalRadar = ({ projects, width, height }: PetalRadarProps) => {
             // Normalize to 0-100 scale where applicable
             acc.euiReduction += Math.max(0, p.resilience.euiReduction * 100);
             acc.indoorWater += Math.max(0, p.resilience.indoorWaterReduction * 100);
-            acc.ecology += p.resilience.ecologyScore ? 100 : 0; // Simplified scoring
-            acc.resilience += p.resilience.resilienceScore ? 100 : 0;
-            acc.opCarbon += p.resilience.operationalCarbonReduction ? 100 : 0;
 
-            acc.air += p.health.airScore ? 100 : 0;
-            acc.light += p.health.lightScore ? 100 : 0;
-            acc.thermal += p.health.thermalComfortScore ? 100 : 0;
-            acc.acoustic += p.health.acousticScore ? 100 : 0;
-            acc.waterQual += p.health.waterQualityScore ? 100 : 0;
-            acc.biophilia += p.health.biophiliaScore ? 100 : 0;
+            // Map raw scores to percentages by their max denominator: 
+            // e.g. (Score / MaxPossibleScore) * 100
+            acc.ecology += (p.resilience.ecologyScore / 4) * 100;
+            acc.resilience += (p.resilience.resilienceScore / 3) * 100;
+            acc.opCarbon += p.resilience.operationalCarbonReduction ? 100 : 0; // Keeping carbon as binary if it doesn't have a max points scale in parser
+
+            acc.air += (p.health.airScore / 4) * 100;
+            acc.light += (p.health.lightScore / 2) * 100;
+            acc.thermal += (p.health.thermalComfortScore / 1) * 100;
+            acc.acoustic += (p.health.acousticScore / 1) * 100;
+            acc.waterQual += (p.health.waterQualityScore / 2) * 100;
+            acc.biophilia += (p.health.biophiliaScore / 6) * 100;
             acc.switchList += p.health.switchListVetted ? 100 : 0;
         });
 

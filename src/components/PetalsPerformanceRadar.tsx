@@ -43,15 +43,33 @@ export const PetalsPerformanceRadar = ({ projects, width, height }: PetalsPerfor
 
         // Create array for Recharts - Ordered clockwise from top
         return [
-            { subject: 'Poetics & Beauty', A: acc.poetics / totalProjects, fullMark: 100 },
-            { subject: 'Conceptual', A: acc.conceptual / totalProjects, fullMark: 100 },
-            { subject: 'Research', A: acc.research / totalProjects, fullMark: 100 },
-            { subject: 'Community', A: acc.community / totalProjects, fullMark: 100 },
-            { subject: 'Resilience', A: acc.resilience / totalProjects, fullMark: 100 },
-            { subject: 'Health', A: acc.health / totalProjects, fullMark: 100 },
-            { subject: 'Technology', A: acc.technology / totalProjects, fullMark: 100 },
+            { subject: 'Poetics &\nBeauty', A: acc.poetics / totalProjects, fullMark: 100 },
+            { subject: 'Conceptual\nClarity', A: acc.conceptual / totalProjects, fullMark: 100 },
+            { subject: 'Research &\nInnovation', A: acc.research / totalProjects, fullMark: 100 },
+            { subject: 'Community &\nInclusion', A: acc.community / totalProjects, fullMark: 100 },
+            { subject: 'Technology &\nTectonics', A: acc.technology / totalProjects, fullMark: 100 },
         ];
     }, [projects]);
+
+    const renderCustomTick = (props: any) => {
+        const { payload, x, y, textAnchor } = props;
+        const lines = payload.value.split('\n');
+        return (
+            <text
+                x={x}
+                y={y + (lines.length > 1 ? -6 : 0)}
+                textAnchor={textAnchor}
+                fill={isDark ? '#888' : '#6b7280'}
+                fontSize={11}
+            >
+                {lines.map((line: string, index: number) => (
+                    <tspan x={x} dy={index === 0 ? 0 : 14} key={index}>
+                        {line}
+                    </tspan>
+                ))}
+            </text>
+        );
+    };
 
     return (
         <div
@@ -61,16 +79,16 @@ export const PetalsPerformanceRadar = ({ projects, width, height }: PetalsPerfor
             <h3 className="text-gray-500 dark:text-gray-400 font-medium absolute top-6 left-6">Petals Performance Average</h3>
 
             <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+                <RadarChart cx="50%" cy="50%" outerRadius="65%" data={data}>
                     <PolarGrid stroke={isDark ? "#444" : "#e5e7eb"} />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: isDark ? '#888' : '#6b7280', fontSize: 12 }} />
+                    <PolarAngleAxis dataKey="subject" tick={renderCustomTick} />
                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                     <Radar
                         name="Petals Average"
                         dataKey="A"
-                        stroke="#8b5cf6" // Purple/Violet
+                        stroke="#22c55e" // Green-500
                         strokeWidth={3}
-                        fill="#8b5cf6"
+                        fill="#22c55e"
                         fillOpacity={0.3}
                         isAnimationActive={!width}
                     />
@@ -82,7 +100,7 @@ export const PetalsPerformanceRadar = ({ projects, width, height }: PetalsPerfor
                             borderRadius: '8px',
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
-                        itemStyle={{ color: '#8b5cf6' }}
+                        itemStyle={{ color: '#22c55e' }}
                         formatter={(value: number) => `${value.toFixed(1)}%`}
                     />
                 </RadarChart>
