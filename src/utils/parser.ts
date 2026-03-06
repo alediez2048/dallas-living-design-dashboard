@@ -127,10 +127,13 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                 const biophiliaIdx = findColIndex(mainHeaderRow, "Biophilia");
 
                 // --- Design Drivers / Petals (Row 1 headers) ---
+                const poeticsIdx = findColIndex(superHeaderRow, "POETICS & BEAUTY");
                 const conceptualIdx = findColIndex(superHeaderRow, "CONCEPTUAL CLARITY");
                 const researchIdx = findColIndex(superHeaderRow, "RESEARCH & INNOVATION");
                 const techIdx = findColIndex(superHeaderRow, "TECHNOLOGY & TECTONICS");
                 const commIdx = findColIndex(superHeaderRow, "COMMUNITY & INCLUSION");
+                const resiliencePetalIdx = findColIndex(superHeaderRow, "RESILIENCE & REGENERATION");
+                const healthPetalIdx = findColIndex(superHeaderRow, "HEALTH & WELL-BEING");
 
                 // Helper to extract totals from main header row (e.g., "4 Total Questions")
                 const getTotal = (idx: number, fallback: number): number => {
@@ -140,12 +143,15 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                     return match ? parseInt(match[1]) : fallback;
                 };
 
+                const totalPoetics = getTotal(poeticsIdx, 4);
                 const totalConceptual = getTotal(conceptualIdx, 4);
                 const totalResearch = getTotal(researchIdx, 4);
                 const totalTech = getTotal(techIdx, 4);
                 const totalComm = getTotal(commIdx, 6);
+                const totalResiliencePetal = getTotal(resiliencePetalIdx, 4);
+                const totalHealthPetal = getTotal(healthPetalIdx, 4);
 
-                logs.push(`Petals Mapping: Conceptual=${conceptualIdx} (Total:${totalConceptual}), Research=${researchIdx} (Total:${totalResearch}), Tech=${techIdx} (Total:${totalTech}), Comm=${commIdx} (Total:${totalComm})`);
+                logs.push(`Petals Mapping: Poetics=${poeticsIdx} (Total:${totalPoetics}), Conceptual=${conceptualIdx} (Total:${totalConceptual}), Research=${researchIdx} (Total:${totalResearch}), Tech=${techIdx} (Total:${totalTech}), Comm=${commIdx} (Total:${totalComm}), Resilience=${resiliencePetalIdx} (Total:${totalResiliencePetal}), Health=${healthPetalIdx} (Total:${totalHealthPetal})`);
 
 
                 const parsedProjects: ProjectMetrics[] = [];
@@ -516,10 +522,13 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                             biophiliaScore: getScore(row[biophiliaIdx]),
                         },
                         designPerformance: {
+                            poeticsBeautyScore: getPetalScore(poeticsIdx, totalPoetics),
                             conceptualClarityScore: getPetalScore(conceptualIdx, totalConceptual),
                             researchInnovationScore: getPetalScore(researchIdx, totalResearch),
                             technologyTectonicsScore: getPetalScore(techIdx, totalTech),
                             communityInclusionScore: getPetalScore(commIdx, totalComm),
+                            resilienceRegenerationScore: getPetalScore(resiliencePetalIdx, totalResiliencePetal),
+                            healthWellbeingScore: getPetalScore(healthPetalIdx, totalHealthPetal),
                         },
                     };
 

@@ -20,27 +20,36 @@ export const PetalsPerformanceRadar = ({ projects, width, height }: PetalsPerfor
 
         // Initialize accumulators
         let acc = {
+            poetics: 0,
             conceptual: 0,
             research: 0,
-            technology: 0,
-            community: 0
+            community: 0,
+            resilience: 0,
+            health: 0,
+            technology: 0
         };
 
         projects.forEach(p => {
             // Scores are 0.0 - 1.0 (or null). Treat null as 0 for coverage.
             // Multiply by 100 for percentage
+            acc.poetics += (p.designPerformance.poeticsBeautyScore || 0) * 100;
             acc.conceptual += (p.designPerformance.conceptualClarityScore || 0) * 100;
             acc.research += (p.designPerformance.researchInnovationScore || 0) * 100;
-            acc.technology += (p.designPerformance.technologyTectonicsScore || 0) * 100;
             acc.community += (p.designPerformance.communityInclusionScore || 0) * 100;
+            acc.resilience += (p.designPerformance.resilienceRegenerationScore || 0) * 100;
+            acc.health += (p.designPerformance.healthWellbeingScore || 0) * 100;
+            acc.technology += (p.designPerformance.technologyTectonicsScore || 0) * 100;
         });
 
-        // Create array for Recharts
+        // Create array for Recharts - Ordered clockwise from top
         return [
+            { subject: 'Poetics & Beauty', A: acc.poetics / totalProjects, fullMark: 100 },
             { subject: 'Conceptual', A: acc.conceptual / totalProjects, fullMark: 100 },
             { subject: 'Research', A: acc.research / totalProjects, fullMark: 100 },
-            { subject: 'Technology', A: acc.technology / totalProjects, fullMark: 100 },
             { subject: 'Community', A: acc.community / totalProjects, fullMark: 100 },
+            { subject: 'Resilience', A: acc.resilience / totalProjects, fullMark: 100 },
+            { subject: 'Health', A: acc.health / totalProjects, fullMark: 100 },
+            { subject: 'Technology', A: acc.technology / totalProjects, fullMark: 100 },
         ];
     }, [projects]);
 

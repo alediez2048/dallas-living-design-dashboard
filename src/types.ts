@@ -38,10 +38,13 @@ export interface ProjectMetrics {
 
     // New: Design Drivers / Petals Performance
     designPerformance: {
-        conceptualClarityScore: number | null; // X / 4
-        researchInnovationScore: number | null; // X / 4
-        technologyTectonicsScore: number | null; // X / 4
-        communityInclusionScore: number | null; // X / 6
+        poeticsBeautyScore: number | null; // Column BB
+        conceptualClarityScore: number | null; // Column S
+        researchInnovationScore: number | null; // Column T
+        communityInclusionScore: number | null; // Column V
+        resilienceRegenerationScore: number | null; // Column AG
+        healthWellbeingScore: number | null; // Column AR
+        technologyTectonicsScore: number | null; // Column AI(?)
     };
 }
 

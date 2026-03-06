@@ -1,4 +1,4 @@
-import { ProjectMetrics } from '../types';
+import { ProjectMetrics } from './src/types';
 import * as XLSX from 'xlsx';
 import { readFile } from 'fs/promises';
 import path from 'path';
@@ -77,7 +77,10 @@ const parseNode = async (filePath: string): Promise<ProjectMetrics[]> => {
             name: String(rawName),
             sector: currentSector,
             isEligible: String(row[eligibleIdx]).toLowerCase().includes('yes') || String(row[eligibleIdx]).toLowerCase().includes('eligible'),
+            eligibilityStatus: "TBD",
             phase: String(row[phaseIdx] || "Unknown"),
+            archVsInt: "Unknown",
+            euiGuidanceLevel: null,
 
             resilience: {
                 euiReduction: euiReduction,
@@ -85,6 +88,10 @@ const parseNode = async (filePath: string): Promise<ProjectMetrics[]> => {
                 operationalCarbonReduction: getNumber(row[opCarbonIdx]),
                 embodiedCarbonPathway: String(row[embodiedCarbonIdx] || "TBD"),
                 indoorWaterReduction: waterReduction,
+                outdoorWaterReduction: null,
+                meetsOutdoorWaterGoal: false,
+                lpdReduction: null,
+                meetsLpdGoal: false,
                 meetsWaterGoal: waterReduction >= 0.40,
                 ecologyScore: getScore(row[ecologyIdx]),
                 resilienceScore: getScore(row[resilienceIdx]),
@@ -99,6 +106,15 @@ const parseNode = async (filePath: string): Promise<ProjectMetrics[]> => {
                 waterQualityScore: getScore(row[waterQualityIdx]),
                 biophiliaScore: getScore(row[biophiliaIdx]),
             },
+            designPerformance: {
+                poeticsBeautyScore: null,
+                conceptualClarityScore: null,
+                researchInnovationScore: null,
+                technologyTectonicsScore: null,
+                communityInclusionScore: null,
+                resilienceRegenerationScore: null,
+                healthWellbeingScore: null,
+            }
         };
 
         parsedProjects.push(project);

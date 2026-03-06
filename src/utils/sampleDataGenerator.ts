@@ -86,10 +86,13 @@ export const generateSampleData = (): ProjectMetrics[] => {
                 biophiliaScore: Math.floor(Math.random() * 6),
             },
             designPerformance: {
+                poeticsBeautyScore: Math.random() > 0.1 ? Math.random() : null,
                 conceptualClarityScore: Math.random() > 0.1 ? Math.random() : null,
                 researchInnovationScore: Math.random() > 0.1 ? Math.random() : null,
-                technologyTectonicsScore: Math.random() > 0.1 ? Math.random() : null,
                 communityInclusionScore: Math.random() > 0.1 ? Math.random() : null,
+                resilienceRegenerationScore: Math.random() > 0.1 ? Math.random() : null,
+                healthWellbeingScore: Math.random() > 0.1 ? Math.random() : null,
+                technologyTectonicsScore: Math.random() > 0.1 ? Math.random() : null,
             },
         });
     });
