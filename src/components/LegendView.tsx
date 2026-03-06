@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, AlertCircle, HelpCircle, MinusCircle, Clock, BookOpen, Ruler, Layers, List, Flower2 } from 'lucide-react';
 import livingDesignFlower from '/living-design-flower.png?url';
+import euiGuidance from '../assets/EUI Guidance.jpeg';
 
 export const LegendView: React.FC = () => {
     const definitions = [
@@ -214,6 +215,26 @@ export const LegendView: React.FC = () => {
             </motion.section>
 
 
+
+            {/* Image Section: EUI Guidance */}
+            <motion.section variants={itemVariants} id="eui-guidance">
+                <div className="flex items-center gap-2 mb-4 md:mb-6">
+                    <Layers className="w-5 h-5 md:w-6 md:h-6 text-indigo-500" />
+                    <h2 className="text-lg md:text-xl xl:text-2xl font-bold text-gray-900 dark:text-white">
+                        EUI Guidance
+                    </h2>
+                </div>
+
+                <div className="flex justify-center w-full">
+                    <div className="bg-white dark:bg-[#1e1e1e] p-2 md:p-4 rounded-2xl border border-gray-200 dark:border-white/10 w-full overflow-hidden">
+                        <img
+                            src={euiGuidance}
+                            alt="EUI Guidance"
+                            className="w-full h-auto rounded-xl shadow-sm hover:scale-[1.01] transition-transform duration-300"
+                        />
+                    </div>
+                </div>
+            </motion.section>
 
             {/* Bottom Spacer */}
             <div className="h-8" />
