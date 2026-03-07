@@ -13,7 +13,7 @@ type RawRow = (string | number | null)[];
  * 1. The Logic Guide: dashboard_logic_guide.md
  * 2. The UI Legend: src/components/LegendModal.tsx
  */
-export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics[], logs: string[] }> => {
+export const parseProjectData = (file: File, reportingYear: number): Promise<{ projects: ProjectMetrics[], logs: string[] }> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         const logs: string[] = [];
@@ -477,6 +477,7 @@ export const parseProjectData = (file: File): Promise<{ projects: ProjectMetrics
                     const project: ProjectMetrics = {
                         id: `proj-${i}`,
                         name: String(rawName),
+                        reportingYear: reportingYear,
                         sector: projectSector,
                         isEligible,
                         eligibilityStatus,

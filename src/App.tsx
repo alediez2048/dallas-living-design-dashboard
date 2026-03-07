@@ -20,7 +20,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 
 
 const DashboardContent = () => {
-  const { projects, logs } = useData();
+  const { projects, logs, activeYears, availableYears, setActiveYears } = useData();
   const [activeSector, setActiveSector] = useState<string>("All Sectors");
   const [hoveredProject, setHoveredProject] = useState<string | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<{ title: string, projects: ProjectMetrics[] } | null>(null);
@@ -48,9 +48,15 @@ const DashboardContent = () => {
   ];
 
   const filteredProjects = useMemo(() => {
-    if (activeSector === "All Sectors") return projects;
-    return projects.filter(p => p.sector === activeSector);
-  }, [projects, activeSector]);
+    let filtered = projects;
+    if (activeYears && activeYears.length > 0) {
+      filtered = filtered.filter(p => activeYears.includes(p.reportingYear));
+    }
+    if (activeSector !== "All Sectors") {
+      filtered = filtered.filter(p => p.sector === activeSector);
+    }
+    return filtered;
+  }, [projects, activeSector, activeYears]);
 
   if (projects.length === 0) {
     return (
@@ -75,23 +81,52 @@ const DashboardContent = () => {
 
   return (
     <DashboardLayout>
-      {/* Sector Tabs */}
-      <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/10">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveSector(tab.id)}
-            className={`
-              px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300
-              ${activeSector === tab.id
-                ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105 dark:shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50 dark:bg-[#1e1e1e] dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#252525] border dark:border-white/5'
-              }
-            `}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Sector and Year Navigation */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-8">
+
+        {/* Sector Tabs */}
+        <div className="flex gap-2 w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/10">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSector(tab.id)}
+              className={`
+                px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300
+                ${activeSector === tab.id
+                  ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105 dark:shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                  : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50 dark:bg-[#1e1e1e] dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#252525] border dark:border-white/5'
+                }
+              `}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Year Filter */}
+        {availableYears && availableYears.length > 1 && (
+          <div className="flex-shrink-0 flex items-center gap-1 bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-md p-1.5 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 px-3 uppercase tracking-wider">Compare Years:</span>
+            {availableYears.map(year => {
+              const isActive = activeYears.includes(year);
+              return (
+                <button
+                  key={year}
+                  onClick={() => {
+                    if (isActive && activeYears.length > 1) {
+                      setActiveYears(activeYears.filter(y => y !== year));
+                    } else if (!isActive) {
+                      setActiveYears([...activeYears, year].sort((a, b) => b - a));
+                    }
+                  }}
+                  className={`px-4 py-1.5 text-sm font-bold rounded-lg transition-all duration-200 ${isActive ? 'bg-indigo-600 text-white shadow-md scale-105' : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'}`}
+                >
+                  {year}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="absolute top-24 right-8">
@@ -207,35 +242,35 @@ const DashboardContent = () => {
               <MetricCard
                 label="Meeting 2030 EUI Goal"
                 projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meets2030Goal)}
-                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
               <MetricCard
                 label="Meeting Indoor Water Goal"
                 projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsWaterGoal)}
-                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
               <MetricCard
                 label="Meeting Outdoor Water Goal"
                 projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsOutdoorWaterGoal)}
-                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
               <MetricCard
                 label="Switch List Vetted"
                 projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.health.switchListVetted)}
-                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
               <MetricCard
                 label="Tracking Embodied Carbon"
                 projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
-                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
@@ -248,35 +283,35 @@ const DashboardContent = () => {
                 <MetricCard
                   label="Level 1 (National Avg)"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 1)}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-red-500 to-red-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Level 2 (Business as Usual)"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 2)}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-orange-500 to-orange-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Level 3 (Baseline)"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 3)}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-yellow-500 to-yellow-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Level 4 (Good)"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 4)}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-lime-500 to-lime-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Level 5 (Excellent)"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 5)}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-green-500 to-green-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
@@ -326,28 +361,28 @@ const DashboardContent = () => {
                 <MetricCard
                   label="Meeting LPD 2030 Goal"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsLpdGoal && p.isEligible)}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
                   color="from-teal-500 to-teal-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Meeting Indoor Water Goal"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsWaterGoal)}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
                   color="from-teal-500 to-teal-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Tracking Embodied Carbon"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
                   color="from-teal-500 to-teal-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Switch List Vetted"
                   projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.health.switchListVetted)}
-                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible).length}
+                  total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
                   color="from-teal-500 to-teal-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
@@ -377,6 +412,7 @@ const DashboardContent = () => {
                 <thead className="text-xs uppercase bg-gray-50/90 dark:bg-[#1a1a1a]/90 text-gray-700 dark:text-gray-200 sticky top-0 backdrop-blur-md z-10 shadow-sm">
                   <tr>
                     <th className="px-4 py-3 rounded-tl-lg">Project Name</th>
+                    <th className="px-3 py-3">Year</th>
                     <th className="px-3 py-3">Sector</th>
                     <th className="px-3 py-3">Type</th>
                     <th className="px-3 py-3">Phase</th>
@@ -405,6 +441,7 @@ const DashboardContent = () => {
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-white transition-colors truncate max-w-[180px] border-l-4 border-transparent hover:border-blue-400">
                         {p.name}
                       </td>
+                      <td className="px-3 py-3 text-xs font-bold text-indigo-600 dark:text-indigo-400">{p.reportingYear}</td>
                       <td className="px-3 py-3 opacity-80 text-xs">{p.sector}</td>
                       <td className="px-3 py-3 opacity-80">
                         <span className={`px-2 py-1 rounded-lg text-xs ${p.archVsInt === 'Architecture' ? 'bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300' : p.archVsInt === 'Interiors' ? 'bg-teal-100 text-teal-600 dark:bg-teal-500/20 dark:text-teal-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>

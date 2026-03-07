@@ -1,12 +1,13 @@
 export interface ProjectMetrics {
     // General
-    id: string;
-    name: string;
-    sector: string;
+    id: string; // Unique identifier for the project
+    name: string; // Client Name / Project Name
+    reportingYear: number; // The calendar year this project's data belongs to (e.g. 2024, 2025, 2026)
+    sector: string; // Practice Area / Sector
     isEligible: boolean;
     eligibilityStatus: string;
-    phase: string; // Added Phase as it is mentioned in key features (Data Detail List)
-    archVsInt: string; // "Architecture" vs "Interiors"
+    phase: string; // Project Phase
+    archVsInt: string; // Architecture vs Interiors distinctioned in key features (Data Detail List)
     euiGuidanceLevel: number | null; // EUI Guidance Level 1-5, null if not assigned
 
     // Petal: Resilience & Regeneration

@@ -13,61 +13,70 @@ export const PetalRadar = ({ projects, width, height }: PetalRadarProps) => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
+    const CHART_COLORS = ["#3b82f6", "#22c55e", "#a855f7", "#f59e0b", "#ef4444"];
 
-    const data = useMemo(() => {
-        if (projects.length === 0) return [];
+    const { data, activeYears } = useMemo(() => {
+        if (projects.length === 0) return { data: [], activeYears: [] };
 
-        let totalProjects = projects.length;
+        const yearsSet = new Set(projects.map(p => p.reportingYear));
+        const activeYearsArray = Array.from(yearsSet).sort((a, b) => b - a);
 
-        // Initialize accumulators
-        let acc = {
-            // Resilience
-            euiReduction: 0,
-            indoorWater: 0,
-            ecology: 0,
-            resilience: 0,
-            opCarbon: 0,
-
-            // Health
-            air: 0,
-            light: 0,
-            thermal: 0,
-            acoustic: 0,
-            waterQual: 0,
-            biophilia: 0,
-            switchList: 0
+        const res: Record<string, any> = {
+            ecology: { subject: 'Ecology', fullMark: 100 },
+            resilience: { subject: 'Resilience', fullMark: 100 },
+            air: { subject: 'Air', fullMark: 100 },
+            light: { subject: 'Light', fullMark: 100 },
+            thermal: { subject: 'Thermal', fullMark: 100 },
+            acoustic: { subject: 'Acoustic', fullMark: 100 },
+            biophilia: { subject: 'Biophilia', fullMark: 100 },
         };
 
-        projects.forEach(p => {
-            // Normalize to 0-100 scale where applicable
-            acc.euiReduction += Math.max(0, p.resilience.euiReduction * 100);
-            acc.indoorWater += Math.max(0, p.resilience.indoorWaterReduction * 100);
+        activeYearsArray.forEach(year => {
+            const yearProjects = projects.filter(p => p.reportingYear === year);
+            const total = yearProjects.length;
 
-            // Map raw scores to percentages by their max denominator: 
-            // e.g. (Score / MaxPossibleScore) * 100
-            acc.ecology += (p.resilience.ecologyScore / 4) * 100;
-            acc.resilience += (p.resilience.resilienceScore / 3) * 100;
-            acc.opCarbon += p.resilience.operationalCarbonReduction ? 100 : 0; // Keeping carbon as binary if it doesn't have a max points scale in parser
+            if (total === 0) return;
 
-            acc.air += (p.health.airScore / 4) * 100;
-            acc.light += (p.health.lightScore / 2) * 100;
-            acc.thermal += (p.health.thermalComfortScore / 1) * 100;
-            acc.acoustic += (p.health.acousticScore / 1) * 100;
-            acc.waterQual += (p.health.waterQualityScore / 2) * 100;
-            acc.biophilia += (p.health.biophiliaScore / 6) * 100;
-            acc.switchList += p.health.switchListVetted ? 100 : 0;
+            let acc = {
+                ecology: 0,
+                resilience: 0,
+                air: 0,
+                light: 0,
+                thermal: 0,
+                acoustic: 0,
+                biophilia: 0,
+            };
+
+            yearProjects.forEach(p => {
+                acc.ecology += (p.resilience.ecologyScore / 4) * 100;
+                acc.resilience += (p.resilience.resilienceScore / 3) * 100;
+                acc.air += (p.health.airScore / 4) * 100;
+                acc.light += (p.health.lightScore / 2) * 100;
+                acc.thermal += (p.health.thermalComfortScore / 1) * 100;
+                acc.acoustic += (p.health.acousticScore / 1) * 100;
+                acc.biophilia += (p.health.biophiliaScore / 6) * 100;
+            });
+
+            res.ecology[year] = acc.ecology / total;
+            res.resilience[year] = acc.resilience / total;
+            res.air[year] = acc.air / total;
+            res.light[year] = acc.light / total;
+            res.thermal[year] = acc.thermal / total;
+            res.acoustic[year] = acc.acoustic / total;
+            res.biophilia[year] = acc.biophilia / total;
         });
 
-        // Create array for Recharts
-        return [
-            { subject: 'Ecology', A: acc.ecology / totalProjects, fullMark: 100 },
-            { subject: 'Resilience', A: acc.resilience / totalProjects, fullMark: 100 },
-            { subject: 'Air', A: acc.air / totalProjects, fullMark: 100 },
-            { subject: 'Light', A: acc.light / totalProjects, fullMark: 100 },
-            { subject: 'Thermal', A: acc.thermal / totalProjects, fullMark: 100 },
-            { subject: 'Acoustic', A: acc.acoustic / totalProjects, fullMark: 100 },
-            { subject: 'Biophilia', A: acc.biophilia / totalProjects, fullMark: 100 },
+        const dataArr = [
+            res.ecology,
+            res.resilience,
+            res.air,
+            res.light,
+            res.thermal,
+            res.acoustic,
+            res.biophilia,
         ];
+
+        return { data: dataArr, activeYears: activeYearsArray };
     }, [projects]);
 
     return (
@@ -77,20 +86,37 @@ export const PetalRadar = ({ projects, width, height }: PetalRadarProps) => {
         >
             <h3 className="text-gray-500 dark:text-gray-400 font-medium absolute top-6 left-6">Studio Performance Average</h3>
 
+            {/* Legend for active years */}
+            {activeYears.length > 1 && (
+                <div className="absolute top-6 right-6 flex flex-col gap-1 items-end">
+                    {activeYears.map((year, idx) => (
+                        <div key={year} className="flex items-center gap-2 text-xs font-medium dark:text-gray-400">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }}></span>
+                            {year}
+                        </div>
+                    ))}
+                </div>
+            )}
+
             <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
                     <PolarGrid stroke={isDark ? "#444" : "#e5e7eb"} />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: isDark ? '#888' : '#6b7280', fontSize: 12 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                    <Radar
-                        name="Studio Average"
-                        dataKey="A"
-                        stroke="#60a5fa"
-                        strokeWidth={3}
-                        fill="#3b82f6"
-                        fillOpacity={0.3}
-                        isAnimationActive={!width}
-                    />
+
+                    {activeYears.map((year, idx) => (
+                        <Radar
+                            key={year}
+                            name={year.toString()}
+                            dataKey={year.toString()}
+                            stroke={CHART_COLORS[idx % CHART_COLORS.length]}
+                            strokeWidth={3 - (idx * 0.5) > 1 ? 3 - (idx * 0.5) : 1}
+                            fill={CHART_COLORS[idx % CHART_COLORS.length]}
+                            fillOpacity={Math.max(0.1, 0.3 - (idx * 0.1))}
+                            isAnimationActive={!width}
+                        />
+                    ))}
+
                     <Tooltip
                         contentStyle={{
                             backgroundColor: isDark ? '#222' : '#fff',
@@ -99,8 +125,7 @@ export const PetalRadar = ({ projects, width, height }: PetalRadarProps) => {
                             borderRadius: '8px',
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
-                        itemStyle={{ color: '#60a5fa' }}
-                        formatter={(value: number) => `${value.toFixed(1)}%`}
+                        formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, `${name} Avg`]}
                     />
                 </RadarChart>
             </ResponsiveContainer>

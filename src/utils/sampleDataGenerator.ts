@@ -44,6 +44,7 @@ export const generateSampleData = (): ProjectMetrics[] => {
         const sector = sectors[Math.min(sectorIndex, sectors.length - 1)];
         const phase = phases[Math.floor(Math.random() * phases.length)];
         const eligibilityStatus = eligibilityStatuses[Math.floor(Math.random() * 4)];
+        const reportingYear = [2024, 2025, 2026][Math.floor(Math.random() * 3)];
 
         // Generate realistic metrics
         const euiReduction = 0.5 + Math.random() * 0.4; // 50-90%
@@ -52,6 +53,7 @@ export const generateSampleData = (): ProjectMetrics[] => {
         projects.push({
             id: `demo-${140000 + i}`,
             name,
+            reportingYear,
             sector,
             phase,
             archVsInt: Math.random() > 0.5 ? 'Architecture' : 'Interiors',

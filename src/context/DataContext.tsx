@@ -9,7 +9,10 @@ interface DataContextType {
     isLoading: boolean;
     error: string | null;
     isDemoMode: boolean;
-    loadData: (file: File) => Promise<void>;
+    activeYears: number[];
+    availableYears: number[];
+    setActiveYears: (years: number[]) => void;
+    loadData: (files: { file: File; year: number }[]) => Promise<void>;
     loadDemoData: () => void;
     resetData: () => void;
 }
@@ -22,23 +25,42 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isDemoMode, setIsDemoMode] = useState(false);
+    const [activeYears, setActiveYears] = useState<number[]>([]);
 
-    const loadData = async (file: File) => {
+    const availableYears = useMemo(() => {
+        const years = new Set(projects.map(p => p.reportingYear));
+        return Array.from(years).sort((a, b) => b - a); // Sort descending
+    }, [projects]);
+
+    const loadData = async (files: { file: File; year: number }[]) => {
         setIsLoading(true);
         setError(null);
         setLogs([]);
         setIsDemoMode(false);
         try {
-            const { projects: data, logs: parserLogs } = await parseProjectData(file);
-            setLogs(parserLogs);
+            const allProjects: ProjectMetrics[] = [];
+            const allLogs: string[] = [];
 
-            if (data.length === 0) {
-                throw new Error("No valid projects found in file.");
+            for (const { file, year } of files) {
+                const { projects: data, logs: parserLogs } = await parseProjectData(file, year);
+                allProjects.push(...data);
+                allLogs.push(`--- Log for ${file.name} (Year: ${year}) ---`);
+                allLogs.push(...parserLogs);
             }
-            setProjects(data);
+
+            setLogs(allLogs);
+
+            if (allProjects.length === 0) {
+                throw new Error("No valid projects found in the provided files.");
+            }
+            setProjects(allProjects);
+
+            // Auto-select all available years by default
+            const years = Array.from(new Set(allProjects.map(p => p.reportingYear))).sort((a, b) => b - a);
+            setActiveYears(years);
         } catch (err) {
             console.error(err);
-            setError(err instanceof Error ? err.message : "Failed to parse file");
+            setError(err instanceof Error ? err.message : "Failed to parse files");
         } finally {
             setIsLoading(false);
         }
@@ -53,6 +75,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => {
             const sampleProjects = generateSampleData();
             setProjects(sampleProjects);
+
+            const years = Array.from(new Set(sampleProjects.map(p => p.reportingYear))).sort((a, b) => b - a);
+            setActiveYears(years);
+
             setIsDemoMode(true);
             setLogs([
                 'Demo mode: Loading sample data...',
@@ -69,10 +95,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         setLogs([]);
         setError(null);
         setIsDemoMode(false);
+        setActiveYears([]);
     };
 
     return (
-        <DataContext.Provider value={{ projects, logs, isLoading, error, isDemoMode, loadData, loadDemoData, resetData }}>
+        <DataContext.Provider value={{ projects, logs, isLoading, error, isDemoMode, activeYears, availableYears, setActiveYears, loadData, loadDemoData, resetData }}>
             {children}
         </DataContext.Provider>
     );
