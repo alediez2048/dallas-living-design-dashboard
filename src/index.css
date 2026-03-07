@@ -42,5 +42,20 @@ h1 {
 
   body {
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Force MetricCards to be fully visible regardless of Framer Motion inline styles */
+  .metric-card-container {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+  }
+
+  /* Strip text gradients to ensure numbers print solidly in black */
+  .metric-value {
+    -webkit-text-fill-color: black !important;
+    color: black !important;
+    background: none !important;
   }
 }
