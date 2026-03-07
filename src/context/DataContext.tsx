@@ -28,7 +28,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const [activeYears, setActiveYears] = useState<number[]>([]);
 
     const availableYears = useMemo(() => {
-        const years = new Set(projects.map(p => p.reportingYear));
+        const years = new Set(
+            projects
+                .map(p => p.reportingYear)
+                .filter((y): y is number => y !== undefined && y !== null && !isNaN(y))
+        );
         return Array.from(years).sort((a, b) => b - a); // Sort descending
     }, [projects]);
 
@@ -42,21 +46,33 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             const allLogs: string[] = [];
 
             for (const { file, year } of files) {
-                const { projects: data, logs: parserLogs } = await parseProjectData(file, year);
-                allProjects.push(...data);
-                allLogs.push(`--- Log for ${file.name} (Year: ${year}) ---`);
-                allLogs.push(...parserLogs);
+                allLogs.push(`--- Parsing: ${file.name} (Year: ${year}) ---`);
+                try {
+                    const { projects: data, logs: parserLogs } = await parseProjectData(file, year);
+                    allProjects.push(...data);
+                    allLogs.push(`✓ Parsed ${data.length} projects from ${file.name} (Year: ${year})`);
+                    allLogs.push(...parserLogs);
+                    if (data.length === 0) {
+                        allLogs.push(`⚠ Warning: 0 projects found in ${file.name} — check that the sheet format matches the expected layout.`);
+                    }
+                } catch (fileErr) {
+                    const msg = fileErr instanceof Error ? fileErr.message : String(fileErr);
+                    allLogs.push(`✗ Error parsing ${file.name}: ${msg}`);
+                    console.error(`Failed to parse ${file.name}:`, fileErr);
+                }
             }
 
             setLogs(allLogs);
 
             if (allProjects.length === 0) {
-                throw new Error("No valid projects found in the provided files.");
+                throw new Error("No valid projects found in any of the provided files. Check the Debug Parser for details.");
             }
             setProjects(allProjects);
 
-            // Auto-select all available years by default
-            const years = Array.from(new Set(allProjects.map(p => p.reportingYear))).sort((a, b) => b - a);
+            // Auto-select all available years by default (filter out any undefined/NaN)
+            const years = Array.from(
+                new Set(allProjects.map(p => p.reportingYear).filter((y): y is number => y !== undefined && y !== null && !isNaN(y)))
+            ).sort((a, b) => b - a);
             setActiveYears(years);
         } catch (err) {
             console.error(err);

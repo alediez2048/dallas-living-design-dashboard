@@ -104,9 +104,11 @@ const DashboardContent = () => {
         </div>
 
         {/* Year Filter */}
-        {availableYears && availableYears.length > 1 && (
+        {availableYears && availableYears.length >= 1 && (
           <div className="flex-shrink-0 flex items-center gap-1 bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-md p-1.5 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
-            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 px-3 uppercase tracking-wider">Compare Years:</span>
+            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 px-3 uppercase tracking-wider">
+              {availableYears.length > 1 ? 'Compare Years:' : 'Year:'}
+            </span>
             {availableYears.map(year => {
               const isActive = activeYears.includes(year);
               return (
