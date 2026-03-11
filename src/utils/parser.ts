@@ -56,10 +56,27 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
                 const projNumIdx = findColIndex(mainHeaderRow, "PROJECT #");
                 const eligibleIdx = findColIndex(mainHeaderRow, "Eligible for reporting?");
                 const phaseIdx = findColIndex(mainHeaderRow, "Phase");
-                const archIntIdx = findColIndex(mainHeaderRow, "Arch vs Int");
                 const sectorIdx = findColIndex(mainHeaderRow, "Sector");
 
-                logs.push(`Column Mapping: Name=${nameIdx}, Proj#=${projNumIdx}, Eligible=${eligibleIdx}, Sector=${sectorIdx}`);
+                // Arch vs Int: try multiple common header variants
+                let archIntIdx = findColIndex(mainHeaderRow, "Arch vs Int");
+                if (archIntIdx === -1) archIntIdx = findColIndex(mainHeaderRow, "Arch/Int");
+                if (archIntIdx === -1) archIntIdx = findColIndex(mainHeaderRow, "Arch or Int");
+                if (archIntIdx === -1) archIntIdx = findColIndex(mainHeaderRow, "Architecture vs Int");
+                if (archIntIdx === -1) archIntIdx = findColIndex(mainHeaderRow, "A vs I");
+                if (archIntIdx === -1) archIntIdx = findColIndex(mainHeaderRow, "Arch v Int");
+                if (archIntIdx === -1) archIntIdx = findColIndex(subHeaderRow, "Arch vs Int");
+                if (archIntIdx === -1) archIntIdx = findColIndex(subHeaderRow, "Arch/Int");
+
+                if (archIntIdx !== -1) logs.push(`Found Arch vs Int Column at index ${archIntIdx}`);
+                else {
+                    logs.push("WARNING: Arch vs Int column NOT found — all projects will be 'Unknown'. Report Architecture/Interiors breakdowns will be empty.");
+                    // Dump the first 20 column headers to help diagnose
+                    const headerSample = mainHeaderRow.slice(0, 30).map((c, i) => `[${i}]=${JSON.stringify(c)}`).join(', ');
+                    logs.push(`Main header row sample: ${headerSample}`);
+                }
+
+                logs.push(`Column Mapping: Name=${nameIdx}, Proj#=${projNumIdx}, Eligible=${eligibleIdx}, Sector=${sectorIdx}, ArchInt=${archIntIdx}`);
                 if (nameIdx === -1 || projNumIdx === -1) {
                     logs.push("CRITICAL WARNING: Name or Project Number column not found!");
                 }

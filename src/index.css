@@ -45,6 +45,18 @@ h1 {
     print-color-adjust: exact;
   }
 
+  /* Force ALL motion/animated elements to be fully visible in print */
+  .print-container *,
+  .print-container div,
+  .print-container span,
+  .print-container p {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
   /* Force MetricCards to be fully visible regardless of Framer Motion inline styles */
   .metric-card-container {
     opacity: 1 !important;
@@ -57,5 +69,7 @@ h1 {
     -webkit-text-fill-color: black !important;
     color: black !important;
     background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
   }
 }

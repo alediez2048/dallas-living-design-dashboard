@@ -60,6 +60,8 @@ export const MetricCard = ({ label, projects, total, color, onClick, compact = f
     return (
         <motion.div
             variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
+            initial="hidden"
+            animate="visible"
             className={`metric-card-container relative ${compact ? 'p-3' : 'p-5'} rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-between ${onClick ? 'hover:border-gray-300 dark:hover:border-white/20 cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : ''} transition-all duration-200 shadow-sm dark:shadow-none h-full ${compact ? 'min-h-[80px]' : 'min-h-[140px]'}`}
             onClick={() => onClick && onClick(label, projects)}
         >
