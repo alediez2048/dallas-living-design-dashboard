@@ -197,13 +197,11 @@ export const FileUploader = () => {
                     <button
                         onClick={loadDemoData}
                         disabled={isLoading}
-                        className="mt-6 w-full group relative overflow-hidden rounded-xl px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        className="mt-6 w-full group rounded-xl px-6 py-4 bg-gray-100 hover:bg-gray-200 dark:bg-white/10 dark:hover:bg-white/15 text-gray-600 dark:text-gray-300 font-medium border border-gray-200 dark:border-white/10 transition-all duration-200 hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-700 dark:to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="relative flex items-center justify-center gap-2">
-                            <Sparkles className="w-5 h-5 animate-pulse" />
+                        <div className="flex items-center justify-center gap-2">
+                            <Sparkles className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                             <span>Try Demo with Sample Data</span>
-                            <Sparkles className="w-5 h-5 animate-pulse" />
                         </div>
                     </button>
 
