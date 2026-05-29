@@ -403,12 +403,12 @@ const DashboardContent = () => {
                     <th className="px-3 py-3">Sector</th>
                     <th className="px-3 py-3">Type</th>
                     <th className="px-3 py-3">Phase</th>
-                    <th className="px-3 py-3 text-center">Elig.</th>
-                    <th className="px-3 py-3 text-center">EUI Lvl</th>
-                    <th className="px-3 py-3 text-center">Switch</th>
-                    <th className="px-3 py-3 text-center">Emb. C</th>
-                    <th className="px-3 py-3 text-right">EUI Red.</th>
-                    <th className="px-3 py-3 text-right rounded-tr-lg">Water Red.</th>
+                    <th className="px-3 py-3 text-center">Eligible</th>
+                    <th className="px-3 py-3 text-center">EUI Level</th>
+                    <th className="px-3 py-3 text-center">Switch List Vetted</th>
+                    <th className="px-3 py-3 text-center">Embodied Carbon Pathway Selected</th>
+                    <th className="px-3 py-3 text-right">EUI Reduction</th>
+                    <th className="px-3 py-3 text-right rounded-tr-lg">Water Reduction</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
