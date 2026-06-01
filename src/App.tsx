@@ -235,7 +235,8 @@ const DashboardContent = () => {
         </div>
 
         {/* Architecture Overview */}
-        <div className="mb-6">
+        {activeSector !== "Workplace" && activeSector !== "Diversified Healthcare Interiors" && (
+          <div className="mb-6">
 
           <div>
             {/* Row 1: Totals */}
@@ -362,6 +363,7 @@ const DashboardContent = () => {
             })()}
           </div>
         </div>
+        )}
 
         {/* Interiors Overview - hide when no interiors projects */}
         {filteredProjects.filter(p => p.archVsInt === 'Interiors').length > 0 && (

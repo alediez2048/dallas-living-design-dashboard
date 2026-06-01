@@ -116,7 +116,7 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                     {hasArchIntSplit ? (
                         <>
                             {archProjects.length > 0 && (
-                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <div className={`${intProjects.length === 0 ? 'col-span-2' : 'col-span-1'} bg-gray-50 p-4 rounded-xl border border-gray-100`}>
                                     <h4 className="text-sm font-bold mb-3 uppercase text-purple-600 tracking-wider">Architecture Overview</h4>
                                     <div className="grid grid-cols-2 gap-3 h-24 mb-3">
                                         <PrintMetricCard label="Total Arch" projects={archProjects} color="from-purple-600 to-purple-400" onClick={() => { }} compact />
@@ -134,7 +134,7 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                             )}
 
                             {intProjects.length > 0 && (
-                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <div className={`${archProjects.length === 0 ? 'col-span-2' : 'col-span-1'} bg-gray-50 p-4 rounded-xl border border-gray-100`}>
                                     <h4 className="text-sm font-bold mb-3 uppercase text-teal-600 tracking-wider">Interiors Overview</h4>
                                     <div className="grid grid-cols-2 gap-3 h-24 mb-3">
                                         <PrintMetricCard label="Total Int" projects={intProjects} color="from-teal-600 to-teal-400" onClick={() => { }} compact />
@@ -167,7 +167,7 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                 </div>
 
                 {/* EUI Guidance Levels */}
-                {eligibleForEui.length > 0 && (() => {
+                {archProjects.length > 0 && eligibleForEui.length > 0 && (() => {
                     const years = Array.from(new Set(eligibleForEui.map(p => p.reportingYear))).sort((a, b) => b - a);
                     const latestYear = years.length > 1 ? years[0] : null;
                     const currentYearEui = latestYear
