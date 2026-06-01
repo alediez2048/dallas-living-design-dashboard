@@ -4,7 +4,7 @@ interface PrintMetricCardProps {
     label: string;
     projects: ProjectMetrics[];
     total?: number | ProjectMetrics[];
-    color?: string;    // unused in print, kept for API compat
+    color?: string;
     compact?: boolean;
     onClick?: (label: string, projects: ProjectMetrics[]) => void; // ignored in print, kept for API compat
 }
@@ -17,45 +17,85 @@ interface PrintMetricCardProps {
  * transitions from opacity:0 → opacity:1, making all cards invisible in the output.
  * This component avoids that entirely.
  */
-export const PrintMetricCard = ({ label, projects, total, compact = false }: PrintMetricCardProps) => {
-    const count = projects.length;
+export const PrintMetricCard = ({ label, projects, total, color, compact = false }: PrintMetricCardProps) => {
+    // Sort available years newest → oldest
+    const allYears = Array.from(new Set(projects.map(p => p.reportingYear))).sort((a, b) => b - a);
+    const hasMultiYear = allYears.length > 1;
+    const latestYear = hasMultiYear ? allYears[0] : null;
+    const prevYear  = hasMultiYear ? allYears[1] : null;
 
+    // ── Main KPI: always show ONLY the latest year (never combine years) ──────
+    const displayProjects = hasMultiYear
+        ? projects.filter(p => p.reportingYear === latestYear)
+        : projects;
+    const count = displayProjects.length;
+
+    // Total denominator — also scoped to latest year when multi-year
     let totalCount: number | undefined;
+    let prevTotalCount: number | undefined;
     if (typeof total === 'number') {
-        totalCount = total;
+        totalCount = total; // scalar denominator — use as-is
     } else if (Array.isArray(total)) {
-        totalCount = total.length;
+        totalCount = hasMultiYear
+            ? total.filter(p => p.reportingYear === latestYear).length
+            : total.length;
+        if (hasMultiYear && prevYear !== null) {
+            prevTotalCount = total.filter(p => p.reportingYear === prevYear).length;
+        }
     }
 
     const percentage = totalCount !== undefined && totalCount > 0
         ? ((count / totalCount) * 100).toFixed(1)
         : null;
 
-    // YoY delta
-    const activeYears = Array.from(new Set(projects.map(p => p.reportingYear))).sort((a, b) => b - a);
-    let deltaText: string | null = null;
-    let isPositive = true;
+    // ── Previous-year context label ───────────────────────────────────────────
+    // Shows the prior year's raw value below the KPI (no %, just the number)
+    // so viewers can compare at a glance.
+    let prevLabel: string | null = null;
+    let isHigher = false;
+    let isLower  = false;
 
-    if (activeYears.length > 1) {
-        const latestYear = activeYears[0];
-        const prevYear = activeYears[1];
-        const latestCount = projects.filter(p => p.reportingYear === latestYear).length;
-        const prevCount = projects.filter(p => p.reportingYear === prevYear).length;
+    if (hasMultiYear && prevYear !== null) {
+        const prevProjects = projects.filter(p => p.reportingYear === prevYear);
+        const prevCount    = prevProjects.length;
 
-        if (Array.isArray(total)) {
-            const latestTotal = total.filter(p => p.reportingYear === latestYear).length;
-            const prevTotal = total.filter(p => p.reportingYear === prevYear).length;
-            if (latestTotal > 0 && prevTotal > 0) {
-                const diff = (latestCount / latestTotal - prevCount / prevTotal) * 100;
-                isPositive = diff >= 0;
-                deltaText = `${Math.abs(diff).toFixed(1)}% vs ${prevYear}`;
-            }
+        if (prevTotalCount !== undefined && prevTotalCount > 0) {
+            // Percentage mode: compare % this year vs % last year
+            const prevPerc = (prevCount / prevTotalCount) * 100;
+            prevLabel = `${prevPerc.toFixed(1)}% in ${prevYear}`;
+            const thisPerc = parseFloat(percentage ?? '0');
+            isHigher = thisPerc > prevPerc;
+            isLower  = thisPerc < prevPerc;
         } else {
-            const diff = latestCount - prevCount;
-            isPositive = diff >= 0;
-            deltaText = `${Math.abs(diff)} vs ${prevYear}`;
+            // Raw count mode
+            prevLabel = `${prevCount} in ${prevYear}`;
+            isHigher = count > prevCount;
+            isLower  = count < prevCount;
         }
     }
+
+    const prevLabelColor = isHigher
+        ? '#16a34a' // P&W green
+        : isLower
+            ? '#dd4832' // P&W coral
+            : '#9ca3af'; // gray
+
+    // Helper to resolve solid Perkins & Will brand colors for printing
+    const getSolidColor = (colorStyle?: string) => {
+        if (!colorStyle) return '#001e62'; // P&W Navy default
+        const styleLower = colorStyle.toLowerCase();
+        if (styleLower.includes('purple')) return '#440099'; // P&W Dark Purple
+        if (styleLower.includes('teal')) return '#009b77';   // P&W Medium Teal
+        if (styleLower.includes('blue')) return '#1818a5';   // P&W Medium Blue
+        if (styleLower.includes('green') || styleLower.includes('emerald')) return '#007a5f'; // P&W Green
+        if (styleLower.includes('red') || styleLower.includes('coral')) return '#dd4832';     // P&W Coral
+        if (styleLower.includes('orange')) return '#ffa900'; // P&W Amber
+        if (styleLower.includes('yellow')) return '#ffa900'; // P&W Amber
+        if (styleLower.includes('lime')) return '#bfc820';   // P&W Lime
+        return '#001e62';
+    };
+
+    const textColor = getSolidColor(color);
 
     return (
         <div
@@ -83,11 +123,16 @@ export const PrintMetricCard = ({ label, projects, total, compact = false }: Pri
                     letterSpacing: '0.05em',
                 }}>
                     {label}
+                    {hasMultiYear && latestYear && (
+                        <span style={{ marginLeft: '6px', fontSize: '9px', fontWeight: 400, color: '#9ca3af', textTransform: 'none' }}>
+                            ({latestYear})
+                        </span>
+                    )}
                 </p>
                 <p style={{
                     fontSize: compact ? '22px' : '36px',
                     fontWeight: 700,
-                    color: '#111827',
+                    color: textColor,
                     margin: 0,
                     lineHeight: 1.1,
                 }}>
@@ -96,21 +141,20 @@ export const PrintMetricCard = ({ label, projects, total, compact = false }: Pri
             </div>
 
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '4px' }}>
-                {deltaText && (
-                    <span style={{
-                        fontSize: '9px',
-                        fontWeight: 600,
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        backgroundColor: isPositive ? '#dcfce7' : '#fee2e2',
-                        color: isPositive ? '#166534' : '#991b1b',
-                    }}>
-                        {isPositive ? '↑' : '↓'} {deltaText}
-                    </span>
-                )}
+                <div>
+                    {prevLabel && (
+                        <span style={{
+                            fontSize: '9px',
+                            fontWeight: 600,
+                            color: prevLabelColor,
+                        }}>
+                            {isHigher ? '↑' : isLower ? '↓' : ''} {prevLabel}
+                        </span>
+                    )}
+                </div>
                 {totalCount !== undefined && (
                     <span style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 500 }}>
-                        {count} / {totalCount}
+                        {count} / {totalCount} projects
                     </span>
                 )}
             </div>
