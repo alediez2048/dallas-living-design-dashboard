@@ -203,7 +203,7 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
 
                         // Direct matches first (most specific)
                         if (s === "K12" || s === "K-12") return "K12";
-                        if (s === "HIGHER ED" || s === "HIGHER EDUCATION" || s === "HIGHER EDU" || s === "HIEHGER ED") return "Higher ED";  // Handle typo "Hiehger ED"
+                        if (s === "HIGHER ED" || s === "HIGHER EDUCATION" || s === "HIGHER EDU" || s === "HIEHGER ED" || s === "HIHGER ED") return "Higher ED";  // Handle typo "Hiehger ED"
                         if (s === "CCC" || s === "CIVIC" || s === "CULTURAL" || s === "COMMUNITY") return "CCC";
                         if (s === "WORKPLACE" || s === "CORPORATE" || s === "COMMERCIAL" || s === "OFFICE") return "Workplace";
                         if (s === "DIVERSIFIED HEALTHCARE INTERIORS" || s === "DIVERSIFIED") return "Diversified Healthcare Interiors";
@@ -213,7 +213,7 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
 
                         // Partial matches - CRITICAL: Check multi-word phrases BEFORE single keywords
                         if (s.includes("K12") || s.includes("K-12") || s.includes("SCHOOL")) return "K12";
-                        if (s.includes("HIGHER ED") || s.includes("HIGHER EDU") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC") || s.includes("HIEHGER")) return "Higher ED";
+                        if (s.includes("HIGHER") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC") || s.includes("HIEHGER") || s.includes("HIEGHER") || s.includes("HIHGER")) return "Higher ED";
                         // Healthcare - check specific phrases before generic keywords
                         if (s.includes("DIVERSIFIED HEALTHCARE") || s.includes("HEALTHCARE DIVERSIFIED")) return "Diversified Healthcare Interiors";
                         if (s.includes("HEALTHCARE HCA") || s.includes("HCA HEALTHCARE")) return "Healthcare HCA";
@@ -240,7 +240,7 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
 
                         // Education
                         if (s.includes("K12") || s.includes("K-12") || s.includes("SCHOOL")) return "K12";
-                        if (s.includes("HIGHER") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC") || s.includes("HIEHGER") || s.includes("HIEGHER")) return "Higher ED";
+                        if (s.includes("HIGHER") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC") || s.includes("HIEHGER") || s.includes("HIEGHER") || s.includes("HIHGER")) return "Higher ED";
 
                         // Healthcare - Check most specific patterns FIRST to avoid misclassification
                         // Order matters: specific multi-word phrases before single keywords
