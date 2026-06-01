@@ -97,7 +97,7 @@ export const MetricCard = ({ label, projects, total, color, onClick, compact = f
             </div>
 
             {/* Bottom: prev-year context + fraction */}
-            <div className={`flex items-end justify-between ${compact ? 'mt-1' : 'mt-3'}`}>
+            <div className={`flex ${compact ? 'flex-col items-start gap-0.5 mt-1' : 'items-end justify-between mt-3'}`}>
                 {/* Previous year reference label */}
                 <div>
                     {prevLabel && (
@@ -109,8 +109,8 @@ export const MetricCard = ({ label, projects, total, color, onClick, compact = f
 
                 {/* Fraction denominator */}
                 {totalCount !== undefined && (
-                    <span className={`${compact ? 'text-[10px]' : 'text-xs'} text-gray-400 dark:text-gray-500 font-medium whitespace-nowrap`}>
-                        {count} / {totalCount} projects
+                    <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-gray-400 dark:text-gray-500 font-medium whitespace-nowrap`}>
+                        {count}/{totalCount} {compact ? '' : 'projects'}
                     </span>
                 )}
             </div>

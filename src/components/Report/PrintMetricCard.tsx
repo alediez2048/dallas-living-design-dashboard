@@ -140,7 +140,14 @@ export const PrintMetricCard = ({ label, projects, total, color, compact = false
                 </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '4px' }}>
+            <div style={{
+                display: 'flex',
+                flexDirection: compact ? 'column' : 'row',
+                alignItems: compact ? 'flex-start' : 'flex-end',
+                justifyContent: 'space-between',
+                marginTop: compact ? '4px' : '12px',
+                gap: compact ? '2px' : '0px',
+            }}>
                 <div>
                     {prevLabel && (
                         <span style={{
@@ -153,8 +160,13 @@ export const PrintMetricCard = ({ label, projects, total, color, compact = false
                     )}
                 </div>
                 {totalCount !== undefined && (
-                    <span style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 500 }}>
-                        {count} / {totalCount} projects
+                    <span style={{ 
+                        fontSize: compact ? '9px' : '10px', 
+                        color: '#9ca3af', 
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap'
+                    }}>
+                        {count}{compact ? '/' : ' / '}{totalCount} {compact ? '' : 'projects'}
                     </span>
                 )}
             </div>
