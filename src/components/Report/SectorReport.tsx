@@ -117,20 +117,38 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                 </div>
 
                 {/* EUI Guidance Levels */}
-                {eligibleForEui.length > 0 && (
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <h4 className="text-sm font-bold mb-3 uppercase text-gray-600 tracking-wider">
-                            EUI Guidance Levels {hasArchIntSplit ? '(Architecture)' : '(All Eligible)'}
-                        </h4>
-                        <div className="grid grid-cols-5 gap-3 h-20">
-                            <PrintMetricCard label="Level 1 (Nat'l Avg)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 1)} total={eligibleForEui.length} color="from-red-500 to-red-400" onClick={() => { }} compact />
-                            <PrintMetricCard label="Level 2 (BAU)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 2)} total={eligibleForEui.length} color="from-orange-500 to-orange-400" onClick={() => { }} compact />
-                            <PrintMetricCard label="Level 3 (Baseline)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 3)} total={eligibleForEui.length} color="from-yellow-500 to-yellow-400" onClick={() => { }} compact />
-                            <PrintMetricCard label="Level 4 (Good)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 4)} total={eligibleForEui.length} color="from-lime-500 to-lime-400" onClick={() => { }} compact />
-                            <PrintMetricCard label="Level 5 (Excellent)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 5)} total={eligibleForEui.length} color="from-green-500 to-green-400" onClick={() => { }} compact />
+                {eligibleForEui.length > 0 && (() => {
+                    const years = Array.from(new Set(eligibleForEui.map(p => p.reportingYear))).sort((a, b) => b - a);
+                    const latestYear = years.length > 1 ? years[0] : null;
+                    const currentYearEui = latestYear
+                        ? eligibleForEui.filter(p => p.reportingYear === latestYear)
+                        : eligibleForEui;
+                    const totalCount = currentYearEui.length;
+                    const hasGuidanceLevelCount = currentYearEui.filter(
+                        p => p.euiGuidanceLevel !== undefined && p.euiGuidanceLevel !== null && p.euiGuidanceLevel >= 1 && p.euiGuidanceLevel <= 5
+                    ).length;
+                    const noInfoCount = totalCount - hasGuidanceLevelCount;
+
+                    return (
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <h4 className="text-sm font-bold mb-3 uppercase text-gray-600 tracking-wider flex items-center justify-between">
+                                <span>EUI Guidance Levels {hasArchIntSplit ? '(Architecture)' : '(All Eligible)'}</span>
+                                {noInfoCount > 0 && (
+                                    <span className="text-xs font-normal text-gray-400 normal-case">
+                                        ({noInfoCount} {noInfoCount === 1 ? 'project' : 'projects'} without information)
+                                    </span>
+                                )}
+                            </h4>
+                            <div className="grid grid-cols-5 gap-3 h-20">
+                                <PrintMetricCard label="Level 1 (Nat'l Avg)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 1)} total={eligibleForEui.length} color="from-red-500 to-red-400" onClick={() => { }} compact />
+                                <PrintMetricCard label="Level 2 (BAU)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 2)} total={eligibleForEui.length} color="from-orange-500 to-orange-400" onClick={() => { }} compact />
+                                <PrintMetricCard label="Level 3 (Baseline)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 3)} total={eligibleForEui.length} color="from-yellow-500 to-yellow-400" onClick={() => { }} compact />
+                                <PrintMetricCard label="Level 4 (Good)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 4)} total={eligibleForEui.length} color="from-lime-500 to-lime-400" onClick={() => { }} compact />
+                                <PrintMetricCard label="Level 5 (Excellent)" projects={eligibleForEui.filter(p => p.euiGuidanceLevel === 5)} total={eligibleForEui.length} color="from-green-500 to-green-400" onClick={() => { }} compact />
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* Footer Page 1 */}
                 <div className="absolute bottom-8 left-0 w-full text-center text-xs text-gray-400">
