@@ -166,7 +166,7 @@ export const PrintMetricCard = ({ label, projects, total, color, compact = false
                         fontWeight: 500,
                         whiteSpace: 'nowrap'
                     }}>
-                        {count}{compact ? '/' : ' / '}{totalCount} {compact ? '' : 'projects'}
+                        {count}{compact ? '/' : ' / '}{totalCount} {compact ? 'eligible' : 'eligible projects'}
                     </span>
                 )}
             </div>

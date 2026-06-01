@@ -110,7 +110,7 @@ export const MetricCard = ({ label, projects, total, color, onClick, compact = f
                 {/* Fraction denominator */}
                 {totalCount !== undefined && (
                     <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-gray-400 dark:text-gray-500 font-medium whitespace-nowrap`}>
-                        {count}/{totalCount} {compact ? '' : 'projects'}
+                        {count}/{totalCount} {compact ? 'eligible' : 'eligible projects'}
                     </span>
                 )}
             </div>
