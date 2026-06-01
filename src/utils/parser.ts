@@ -240,7 +240,7 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
 
                         // Education
                         if (s.includes("K12") || s.includes("K-12") || s.includes("SCHOOL")) return "K12";
-                        if (s.includes("HIGHER ED") || s.includes("HIGHER EDU") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC")) return "Higher ED";
+                        if (s.includes("HIGHER") || s.includes("UNIVERSITY") || s.includes("COLLEGE") || s.includes("CAMPUS") || s.includes("ACADEMIC") || s.includes("HIEHGER") || s.includes("HIEGHER")) return "Higher ED";
 
                         // Healthcare - Check most specific patterns FIRST to avoid misclassification
                         // Order matters: specific multi-word phrases before single keywords
