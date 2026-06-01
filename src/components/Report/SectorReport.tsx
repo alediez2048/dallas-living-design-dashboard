@@ -58,7 +58,57 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                         projects={eligibleProjects}
                         color="from-green-600 to-emerald-500"
                     />
-                    <div className="col-span-2"></div>
+                    <div
+                        style={{
+                            padding: '16px',
+                            borderRadius: '12px',
+                            backgroundColor: '#ffffff',
+                            border: '1px solid #e5e7eb',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            height: '100%',
+                            minHeight: '120px',
+                            boxSizing: 'border-box',
+                        }}
+                    >
+                        <div>
+                            <p style={{
+                                fontSize: '10px',
+                                color: '#6b7280',
+                                fontWeight: 500,
+                                margin: 0,
+                                marginBottom: '2px',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                            }}>
+                                Energy Modeled
+                            </p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontSize: '9px', color: '#16a34a', fontWeight: 600, textTransform: 'uppercase' }}>Yes</span>
+                                    <span style={{ fontSize: '24px', fontWeight: 700, color: '#16a34a', lineHeight: 1.1 }}>
+                                        {projects.filter(p => p.energyModel === 'Yes').length}
+                                    </span>
+                                </div>
+                                <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb' }}></div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontSize: '9px', color: '#dd4832', fontWeight: 600, textTransform: 'uppercase' }}>No</span>
+                                    <span style={{ fontSize: '24px', fontWeight: 700, color: '#dd4832', lineHeight: 1.1 }}>
+                                        {projects.filter(p => p.energyModel === 'No').length}
+                                    </span>
+                                </div>
+                                <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb' }}></div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontSize: '9px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>N/A</span>
+                                    <span style={{ fontSize: '24px', fontWeight: 700, color: '#6b7280', lineHeight: 1.1 }}>
+                                        {projects.filter(p => p.energyModel === 'N/A').length}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-span-1"></div>
                 </div>
 
                 {/* Architecture & Interiors Breakdowns */}

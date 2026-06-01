@@ -57,6 +57,7 @@ export const generateSampleData = (): ProjectMetrics[] => {
             sector,
             phase,
             archVsInt: Math.random() > 0.5 ? 'Architecture' : 'Interiors',
+            energyModel: ['Yes', 'No', 'N/A'][Math.floor(Math.random() * 3)],
             isEligible: eligibilityStatus === 'Yes',
             eligibilityStatus,
             euiGuidanceLevel: Math.random() > 0.5

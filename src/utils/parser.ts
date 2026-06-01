@@ -130,6 +130,15 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
                 if (euiGuidanceIdx !== -1) logs.push(`Found EUI Guidance Level Column at index ${euiGuidanceIdx}`);
                 else logs.push("EUI Guidance Level Column NOT found");
 
+                // Energy Model Column Index
+                let energyModelIdx = findColIndex(subHeaderRow, "Energy Model");
+                if (energyModelIdx === -1) energyModelIdx = findColIndex(mainHeaderRow, "Energy Model");
+                if (energyModelIdx === -1) energyModelIdx = findColIndex(subHeaderRow, "Energy Modeled");
+                if (energyModelIdx === -1) energyModelIdx = findColIndex(mainHeaderRow, "Energy Modeled");
+
+                if (energyModelIdx !== -1) logs.push(`Found Energy Model Column at index ${energyModelIdx}`);
+                else logs.push("Energy Model Column NOT found");
+
                 // Ecology & Resilience Scores (Row 2)
                 const ecologyIdx = findColIndex(mainHeaderRow, "Ecology");
                 const resilienceIdx = findColIndex(mainHeaderRow, "Resilience - 1~3");
@@ -504,6 +513,15 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
                             if (val.toLowerCase() === 'a' || val.toLowerCase() === 'architecture') return "Architecture";
                             if (val.toLowerCase() === 'i' || val.toLowerCase() === 'interiors') return "Interiors";
                             return val || "Unknown";
+                        })(),
+                        energyModel: (() => {
+                            if (energyModelIdx === -1) return "N/A";
+                            const val = row[energyModelIdx];
+                            if (val === null || val === undefined || val === '') return "N/A";
+                            const s = String(val).trim().toUpperCase();
+                            if (s === "YES" || s === "Y" || s === "TRUE" || s === "1") return "Yes";
+                            if (s === "NO" || s === "N" || s === "FALSE" || s === "0") return "No";
+                            return "N/A";
                         })(),
                         euiGuidanceLevel: (() => {
                             if (euiGuidanceIdx === -1) return null;

@@ -8,6 +8,7 @@ export interface ProjectMetrics {
     eligibilityStatus: string;
     phase: string; // Project Phase
     archVsInt: string; // Architecture vs Interiors distinctioned in key features (Data Detail List)
+    energyModel: string; // "Yes", "No", "N/A"
     euiGuidanceLevel: number | null; // EUI Guidance Level 1-5, null if not assigned
 
     // Petal: Resilience & Regeneration
