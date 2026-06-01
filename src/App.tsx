@@ -228,35 +228,35 @@ const DashboardContent = () => {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-2">
               <MetricCard
                 label="Meeting 2030 EUI Goal"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meets2030Goal)}
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.resilience.meets2030Goal)}
                 total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
               <MetricCard
                 label="Meeting Indoor Water Goal"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsWaterGoal)}
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.resilience.meetsWaterGoal)}
                 total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
               <MetricCard
                 label="Meeting Outdoor Water Goal"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.meetsOutdoorWaterGoal)}
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.resilience.meetsOutdoorWaterGoal)}
                 total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
               <MetricCard
                 label="Switch List Vetted"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.health.switchListVetted)}
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.health.switchListVetted)}
                 total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
               />
               <MetricCard
                 label="Tracking Embodied Carbon"
-                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
+                projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
                 total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                 color="from-purple-500 to-purple-400"
                 onClick={(title, projects) => setSelectedMetric({ title, projects })}
@@ -347,28 +347,28 @@ const DashboardContent = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
                 <MetricCard
                   label="Meeting LPD 2030 Goal"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsLpdGoal && p.isEligible)}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible && p.resilience.meetsLpdGoal)}
                   total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
                   color="from-teal-500 to-teal-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Meeting Indoor Water Goal"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.meetsWaterGoal)}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible && p.resilience.meetsWaterGoal)}
                   total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
                   color="from-teal-500 to-teal-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Tracking Embodied Carbon"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible && p.resilience.embodiedCarbonPathway !== 'N/A' && p.resilience.embodiedCarbonPathway !== 'TBD' && p.resilience.embodiedCarbonPathway.toLowerCase() !== 'no')}
                   total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
                   color="from-teal-500 to-teal-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Switch List Vetted"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.health.switchListVetted)}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible && p.health.switchListVetted)}
                   total={filteredProjects.filter(p => p.archVsInt === 'Interiors' && p.isEligible)}
                   color="from-teal-500 to-teal-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
