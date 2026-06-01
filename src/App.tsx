@@ -269,35 +269,35 @@ const DashboardContent = () => {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <MetricCard
                   label="Level 1 (National Avg)"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 1)}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.euiGuidanceLevel === 1)}
                   total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-red-500 to-red-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Level 2 (Business as Usual)"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 2)}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.euiGuidanceLevel === 2)}
                   total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-orange-500 to-orange-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Level 3 (Baseline)"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 3)}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.euiGuidanceLevel === 3)}
                   total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-yellow-500 to-yellow-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Level 4 (Good)"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 4)}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.euiGuidanceLevel === 4)}
                   total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-lime-500 to-lime-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
                 />
                 <MetricCard
                   label="Level 5 (Excellent)"
-                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.euiGuidanceLevel === 5)}
+                  projects={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.euiGuidanceLevel === 5)}
                   total={filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible)}
                   color="from-green-500 to-green-400"
                   onClick={(title, projects) => setSelectedMetric({ title, projects })}
