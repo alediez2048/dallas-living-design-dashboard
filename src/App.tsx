@@ -243,28 +243,28 @@ const DashboardContent = () => {
                 initial="hidden"
                 animate="visible"
                 className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm dark:shadow-none cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-                onClick={() => setSelectedMetric({ title: "Architecture Energy Modeled Projects", projects: filteredProjects.filter(p => p.archVsInt === 'Architecture') })}
+                onClick={() => setSelectedMetric({ title: "Architecture Energy Modeled Projects", projects: filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible) })}
               >
                 <h3 className="text-gray-500 dark:text-gray-400 mb-2 font-medium">Energy Modeled</h3>
                 <div className="flex items-center justify-between mt-1 h-full">
                   <div className="flex flex-col">
                     <span className="text-[10px] text-green-500 dark:text-green-400 font-bold uppercase tracking-wider">Yes</span>
                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.energyModel === 'Yes').length}
+                      {filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.energyModel === 'Yes').length}
                     </p>
                   </div>
                   <div className="h-8 w-px bg-gray-200 dark:bg-white/10 mx-2"></div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-red-500 dark:text-red-400 font-bold uppercase tracking-wider">No</span>
                     <p className="text-3xl font-bold text-red-500 dark:text-red-400">
-                      {filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.energyModel === 'No').length}
+                      {filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.energyModel === 'No').length}
                     </p>
                   </div>
                   <div className="h-8 w-px bg-gray-200 dark:bg-white/10 mx-2"></div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">N/A</span>
                     <p className="text-3xl font-bold text-gray-500 dark:text-gray-400">
-                      {filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.energyModel === 'N/A').length}
+                      {filteredProjects.filter(p => p.archVsInt === 'Architecture' && p.isEligible && p.energyModel === 'N/A').length}
                     </p>
                   </div>
                 </div>

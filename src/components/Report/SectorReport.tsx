@@ -71,12 +71,12 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                                         <PrintMetricCard label="Total Arch" projects={archProjects} color="from-purple-600 to-purple-400" onClick={() => { }} compact />
                                         <PrintMetricCard label="Eligible" projects={eligibleArch} color="from-purple-500 to-purple-300" onClick={() => { }} compact />
                                         {(() => {
-                                            const archYears = Array.from(new Set(archProjects.map(p => p.reportingYear))).sort((a, b) => b - a);
-                                            const hasArchMultiYear = archYears.length > 1;
-                                            const latestArchYear = hasArchMultiYear ? archYears[0] : null;
-                                            const displayArchProjects = hasArchMultiYear
-                                                ? archProjects.filter(p => p.reportingYear === latestArchYear)
-                                                : archProjects;
+                                            const eligibleArchYears = Array.from(new Set(eligibleArch.map(p => p.reportingYear))).sort((a, b) => b - a);
+                                            const hasEligibleArchMultiYear = eligibleArchYears.length > 1;
+                                            const latestEligibleArchYear = hasEligibleArchMultiYear ? eligibleArchYears[0] : null;
+                                            const displayEligibleArchProjects = hasEligibleArchMultiYear
+                                                ? eligibleArch.filter(p => p.reportingYear === latestEligibleArchYear)
+                                                : eligibleArch;
                                             
                                             return (
                                                 <div
@@ -104,9 +104,9 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                                                             letterSpacing: '0.05em',
                                                         }}>
                                                             Energy Modeled
-                                                            {hasArchMultiYear && latestArchYear && (
+                                                            {hasEligibleArchMultiYear && latestEligibleArchYear && (
                                                                 <span style={{ marginLeft: '6px', fontSize: '9px', fontWeight: 400, color: '#9ca3af', textTransform: 'none' }}>
-                                                                    ({latestArchYear})
+                                                                    ({latestEligibleArchYear})
                                                                 </span>
                                                             )}
                                                         </p>
@@ -114,21 +114,21 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                                 <span style={{ fontSize: '8px', color: '#16a34a', fontWeight: 600, textTransform: 'uppercase' }}>Yes</span>
                                                                 <span style={{ fontSize: '18px', fontWeight: 700, color: '#16a34a', lineHeight: 1.1 }}>
-                                                                    {displayArchProjects.filter(p => p.energyModel === 'Yes').length}
+                                                                    {displayEligibleArchProjects.filter(p => p.energyModel === 'Yes').length}
                                                                 </span>
                                                             </div>
                                                             <div style={{ width: '1px', height: '18px', backgroundColor: '#e5e7eb' }}></div>
                                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                                 <span style={{ fontSize: '8px', color: '#dd4832', fontWeight: 600, textTransform: 'uppercase' }}>No</span>
                                                                 <span style={{ fontSize: '18px', fontWeight: 700, color: '#dd4832', lineHeight: 1.1 }}>
-                                                                    {displayArchProjects.filter(p => p.energyModel === 'No').length}
+                                                                    {displayEligibleArchProjects.filter(p => p.energyModel === 'No').length}
                                                                 </span>
                                                             </div>
                                                             <div style={{ width: '1px', height: '18px', backgroundColor: '#e5e7eb' }}></div>
                                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                                 <span style={{ fontSize: '8px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>N/A</span>
                                                                 <span style={{ fontSize: '18px', fontWeight: 700, color: '#6b7280', lineHeight: 1.1 }}>
-                                                                    {displayArchProjects.filter(p => p.energyModel === 'N/A').length}
+                                                                    {displayEligibleArchProjects.filter(p => p.energyModel === 'N/A').length}
                                                                 </span>
                                                             </div>
                                                         </div>
