@@ -207,10 +207,25 @@ const DashboardContent = () => {
         {/* Architecture Overview */}
         {activeSector !== "Workplace" && activeSector !== "Diversified Healthcare Interiors" && (
           <div className="mb-6">
+            <button
+              onClick={() => setIsArchExpanded(!isArchExpanded)}
+              className="flex items-center gap-2 mb-3 w-full text-left group hover:opacity-80 transition-opacity"
+            >
+              {isArchExpanded ? <ChevronDown className="w-6 h-6 text-gray-400 dark:text-gray-500" /> : <ChevronRight className="w-6 h-6 text-gray-400 dark:text-gray-500" />}
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
+                Architecture projects
+              </h3>
+            </button>
 
-          <div>
-            {/* Row 1: Totals */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <motion.div
+              initial={false}
+              animate={{ height: isArchExpanded ? "auto" : 0, opacity: isArchExpanded ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              {/* Row 1: Totals */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <MetricCard
                 label="Total Architecture Projects"
                 projects={filteredProjects.filter(p => p.archVsInt === 'Architecture')}
@@ -360,8 +375,8 @@ const DashboardContent = () => {
                 </div>
               );
             })()}
+            </motion.div>
           </div>
-        </div>
         )}
 
         {/* Interiors Overview - hide when no interiors projects */}
