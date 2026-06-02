@@ -240,6 +240,8 @@ const DashboardContent = () => {
               />
               <motion.div
                 variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
+                initial="hidden"
+                animate="visible"
                 className="p-6 rounded-2xl bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200 shadow-sm dark:shadow-none cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 onClick={() => setSelectedMetric({ title: "Architecture Energy Modeled Projects", projects: filteredProjects.filter(p => p.archVsInt === 'Architecture') })}
               >
