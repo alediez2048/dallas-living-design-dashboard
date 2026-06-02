@@ -62,13 +62,15 @@ export const PrintMetricCard = ({ label, projects, total, color, compact = false
         if (prevTotalCount !== undefined && prevTotalCount > 0) {
             // Percentage mode: compare % this year vs % last year
             const prevPerc = (prevCount / prevTotalCount) * 100;
-            prevLabel = `${prevPerc.toFixed(1)}% in ${prevYear}`;
             const thisPerc = parseFloat(percentage ?? '0');
+            const deltaVal = Math.abs(thisPerc - prevPerc).toFixed(1);
+            prevLabel = `${deltaVal}% vs ${prevYear} (was ${prevPerc.toFixed(1)}%)`;
             isHigher = thisPerc > prevPerc;
             isLower  = thisPerc < prevPerc;
         } else {
             // Raw count mode
-            prevLabel = `${prevCount} in ${prevYear}`;
+            const deltaVal = Math.abs(count - prevCount);
+            prevLabel = `${deltaVal} vs ${prevYear} (was ${prevCount})`;
             isHigher = count > prevCount;
             isLower  = count < prevCount;
         }
