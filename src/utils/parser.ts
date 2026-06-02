@@ -23,22 +23,52 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
             try {
                 const data = e.target?.result;
                 const workbook = XLSX.read(data, { type: 'binary' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Robust Sheet Finder: Scan all sheets to find the one containing "PROJECT NAME"
+                let targetSheetName = "";
+                let worksheet: XLSX.WorkSheet | null = null;
+                let rawData: RawRow[] = [];
+                let headerIdx = -1;
 
-                // Convert to JSON array of arrays (treating all cells as raw values)
-                const rawData = XLSX.utils.sheet_to_json<RawRow>(worksheet, { header: 1, defval: null });
-                logs.push(`Sheet found: ${firstSheetName}, total rows: ${rawData.length}`);
+                for (const sheetName of workbook.SheetNames) {
+                    const sheet = workbook.Sheets[sheetName];
+                    const sheetData = XLSX.utils.sheet_to_json<RawRow>(sheet, { header: 1, defval: null });
+                    
+                    for (let r = 0; r < Math.min(25, sheetData.length); r++) {
+                        const row = sheetData[r];
+                        if (row) {
+                            const nameCol = row.findIndex((cell) =>
+                                typeof cell === 'string' && cell.toLowerCase().includes("project name")
+                            );
+                            if (nameCol !== -1) {
+                                targetSheetName = sheetName;
+                                worksheet = sheet;
+                                rawData = sheetData;
+                                headerIdx = r;
+                                break;
+                            }
+                        }
+                    }
+                    if (headerIdx !== -1) break;
+                }
 
-                // Identify Header Rows
-                // Row 2 (Index 1): Main Headers ("PROJECT NAME", "Phase", "Switch List Vetted")
-                // Row 3 (Index 2): Sub Headers ("Predicted Net EUI", "% of reduction")
-                const superHeaderRow = rawData[0]; // Row 1 (Index 0) - Contains Petal Categories
-                const mainHeaderRow = rawData[1];
-                const subHeaderRow = rawData[2];
+                if (headerIdx === -1) {
+                    logs.push(`⚠ Warning: Could not find "PROJECT NAME" header automatically. Falling back to the first sheet.`);
+                    targetSheetName = workbook.SheetNames[0];
+                    worksheet = workbook.Sheets[targetSheetName];
+                    rawData = XLSX.utils.sheet_to_json<RawRow>(worksheet, { header: 1, defval: null });
+                    headerIdx = 1; // Fallback to index 1 (Row 2)
+                } else {
+                    logs.push(`✓ Auto-detected data sheet: "${targetSheetName}" with main headers at row ${headerIdx + 1}`);
+                }
+
+                // Identify Header Rows relative to the detected headerIdx
+                const mainHeaderRow = rawData[headerIdx];
+                const subHeaderRow = rawData[headerIdx + 1];
+                const superHeaderRow = headerIdx > 0 ? rawData[headerIdx - 1] : rawData[headerIdx];
 
                 if (!mainHeaderRow || !subHeaderRow) {
-                    reject(new Error("Could not find header rows (Row 2 and 3) in the Excel file."));
+                    reject(new Error("Could not find header rows in the Excel file."));
                     return;
                 }
 
@@ -183,8 +213,9 @@ export const parseProjectData = (file: File, reportingYear: number): Promise<{ p
                 const parsedProjects: ProjectMetrics[] = [];
                 let currentSector = "Unknown Sector";
 
-                // --- Iterate Data Rows (Starting from Row 6 / Index 5) ---
-                for (let i = 5; i < rawData.length; i++) {
+                // --- Iterate Data Rows (Starting directly below sub-header row) ---
+                const startRowIdx = headerIdx + 2;
+                for (let i = startRowIdx; i < rawData.length; i++) {
                     const row = rawData[i];
 
                     // Skip empty rows
