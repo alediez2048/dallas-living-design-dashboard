@@ -47,7 +47,7 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                 </div>
 
                 {/* Main Metrics */}
-                <div className="grid grid-cols-4 gap-4 mb-6 h-28">
+                <div className="grid grid-cols-2 gap-4 mb-6 h-28">
                     <PrintMetricCard
                         label="Total Projects"
                         projects={projects}
@@ -58,57 +58,6 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                         projects={eligibleProjects}
                         color="from-green-600 to-emerald-500"
                     />
-                    <div
-                        style={{
-                            padding: '16px',
-                            borderRadius: '12px',
-                            backgroundColor: '#ffffff',
-                            border: '1px solid #e5e7eb',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            height: '100%',
-                            minHeight: '120px',
-                            boxSizing: 'border-box',
-                        }}
-                    >
-                        <div>
-                            <p style={{
-                                fontSize: '10px',
-                                color: '#6b7280',
-                                fontWeight: 500,
-                                margin: 0,
-                                marginBottom: '2px',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                            }}>
-                                Energy Modeled
-                            </p>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ fontSize: '9px', color: '#16a34a', fontWeight: 600, textTransform: 'uppercase' }}>Yes</span>
-                                    <span style={{ fontSize: '24px', fontWeight: 700, color: '#16a34a', lineHeight: 1.1 }}>
-                                        {projects.filter(p => p.energyModel === 'Yes').length}
-                                    </span>
-                                </div>
-                                <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb' }}></div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ fontSize: '9px', color: '#dd4832', fontWeight: 600, textTransform: 'uppercase' }}>No</span>
-                                    <span style={{ fontSize: '24px', fontWeight: 700, color: '#dd4832', lineHeight: 1.1 }}>
-                                        {projects.filter(p => p.energyModel === 'No').length}
-                                    </span>
-                                </div>
-                                <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb' }}></div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ fontSize: '9px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>N/A</span>
-                                    <span style={{ fontSize: '24px', fontWeight: 700, color: '#6b7280', lineHeight: 1.1 }}>
-                                        {projects.filter(p => p.energyModel === 'N/A').length}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-span-1"></div>
                 </div>
 
                 {/* Architecture & Interiors Breakdowns */}
@@ -118,9 +67,75 @@ export const SectorReport = ({ title, projects }: SectorReportProps) => {
                             {archProjects.length > 0 && (
                                 <div className={`${intProjects.length === 0 ? 'col-span-2' : 'col-span-1'} bg-gray-50 p-4 rounded-xl border border-gray-100`}>
                                     <h4 className="text-sm font-bold mb-3 uppercase text-purple-600 tracking-wider">Architecture Overview</h4>
-                                    <div className="grid grid-cols-2 gap-3 h-24 mb-3">
+                                    <div className="grid grid-cols-3 gap-3 h-24 mb-3">
                                         <PrintMetricCard label="Total Arch" projects={archProjects} color="from-purple-600 to-purple-400" onClick={() => { }} compact />
                                         <PrintMetricCard label="Eligible" projects={eligibleArch} color="from-purple-500 to-purple-300" onClick={() => { }} compact />
+                                        {(() => {
+                                            const archYears = Array.from(new Set(archProjects.map(p => p.reportingYear))).sort((a, b) => b - a);
+                                            const hasArchMultiYear = archYears.length > 1;
+                                            const latestArchYear = hasArchMultiYear ? archYears[0] : null;
+                                            const displayArchProjects = hasArchMultiYear
+                                                ? archProjects.filter(p => p.reportingYear === latestArchYear)
+                                                : archProjects;
+                                            
+                                            return (
+                                                <div
+                                                    style={{
+                                                        padding: '8px',
+                                                        borderRadius: '12px',
+                                                        backgroundColor: '#ffffff',
+                                                        border: '1px solid #e5e7eb',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        justifyContent: 'space-between',
+                                                        height: '100%',
+                                                        minHeight: '72px',
+                                                        boxSizing: 'border-box',
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <p style={{
+                                                            fontSize: '10px',
+                                                            color: '#6b7280',
+                                                            fontWeight: 500,
+                                                            margin: 0,
+                                                            marginBottom: '2px',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.05em',
+                                                        }}>
+                                                            Energy Modeled
+                                                            {hasArchMultiYear && latestArchYear && (
+                                                                <span style={{ marginLeft: '6px', fontSize: '9px', fontWeight: 400, color: '#9ca3af', textTransform: 'none' }}>
+                                                                    ({latestArchYear})
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span style={{ fontSize: '8px', color: '#16a34a', fontWeight: 600, textTransform: 'uppercase' }}>Yes</span>
+                                                                <span style={{ fontSize: '18px', fontWeight: 700, color: '#16a34a', lineHeight: 1.1 }}>
+                                                                    {displayArchProjects.filter(p => p.energyModel === 'Yes').length}
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ width: '1px', height: '18px', backgroundColor: '#e5e7eb' }}></div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span style={{ fontSize: '8px', color: '#dd4832', fontWeight: 600, textTransform: 'uppercase' }}>No</span>
+                                                                <span style={{ fontSize: '18px', fontWeight: 700, color: '#dd4832', lineHeight: 1.1 }}>
+                                                                    {displayArchProjects.filter(p => p.energyModel === 'No').length}
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ width: '1px', height: '18px', backgroundColor: '#e5e7eb' }}></div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span style={{ fontSize: '8px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>N/A</span>
+                                                                <span style={{ fontSize: '18px', fontWeight: 700, color: '#6b7280', lineHeight: 1.1 }}>
+                                                                    {displayArchProjects.filter(p => p.energyModel === 'N/A').length}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                     {/* Architecture Metrics Row */}
                                     <div className="grid grid-cols-5 gap-2 h-20">
