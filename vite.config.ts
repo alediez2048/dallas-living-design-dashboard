@@ -10,7 +10,12 @@ export default defineConfig({
     port: 3000,
     // Bind all interfaces (IPv4 127.0.0.1 + IPv6) so `localhost` always connects.
     host: true,
-    open: true
+    open: true,
+    // In dev the frontend (Vite, 3000) proxies API calls to the Express server (3001).
+    // In production one Railway service serves both, so no proxy is needed.
+    proxy: {
+      '/api': 'http://localhost:3001',
+    },
   },
   build: {
     rollupOptions: {

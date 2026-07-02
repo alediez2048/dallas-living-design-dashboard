@@ -1,6 +1,9 @@
+import './env' // must be first: loads .env.local before anything reads process.env
 import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { clerkMiddleware } from '@clerk/express'
+import { adminStatus, adminUnlock } from './auth'
 
 /**
  * Dallas Living Design Dashboard — backend service (Railway).
@@ -22,12 +25,20 @@ const PORT = Number(process.env.PORT) || 3000
 
 app.use(express.json({ limit: '1mb' }))
 
+// Populates request auth from the Clerk session (Bearer token or cookie).
+app.use(clerkMiddleware())
+
 // --- API ---
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'dallas-living-design-dashboard' })
 })
 
-// TODO (Phase 1+): /api/chat, /api/edit, /api/publish, /api/keys, /api/audit
+// --- Admin auth (Phase 1) ---
+// Public dashboard needs none of this; these gate admin-only features.
+app.get('/api/admin/status', adminStatus)
+app.post('/api/admin/unlock', adminUnlock)
+
+// TODO (Phase 2+): /api/chat, /api/edit, /api/publish, /api/keys, /api/audit
 // all guarded by verifyAdmin().
 
 // --- Static frontend ---

@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "tsx watch server/index.ts",
+    "dev:server": "PORT=3001 tsx watch server/index.ts",
     "build": "tsc -b && vite build",
     "start": "tsx server/index.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.8",
+    "@clerk/express": "^2.1.35",
+    "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "framer-motion": "^12.23.26",
     "lodash": "^4.17.21",
