@@ -6,6 +6,7 @@ import { clerkMiddleware } from '@clerk/express'
 import { adminStatus, adminUnlock, verifyAdmin } from './auth'
 import { getSettings, postSettings, chat } from './chat'
 import { proposeEdits } from './agent'
+import { commitEdits, getChecks, mergePR, rollbackTo, githubConfigured, deployBranch } from './github'
 import { writeAudit } from './db'
 import type { Request } from 'express'
 
@@ -61,8 +62,66 @@ app.post('/api/edit', verifyAdmin, async (req, res) => {
   }
 })
 
-// TODO (Phase 3 commit stage — needs GITHUB_TOKEN + GitHub-connected Railway):
-// /api/publish (commit branch -> PR -> merge -> deploy), /api/audit, rollback
+// --- Publish flow (Phase 3 safety net) — commit -> PR -> CI gate -> merge -> rollback ---
+const adminEmail = (req: Request) => (req as Request & { adminEmail?: string }).adminEmail
+
+app.get('/api/publish/config', verifyAdmin, (_req, res) => {
+  res.json({ githubConfigured: githubConfigured(), deployBranch: githubConfigured() ? deployBranch() : null })
+})
+
+// Commit approved edits to a new branch + open a PR (CI runs the build on it).
+app.post('/api/publish', verifyAdmin, async (req, res) => {
+  try {
+    if (!githubConfigured()) return res.status(400).json({ error: 'GitHub is not configured (GITHUB_TOKEN/GITHUB_REPO).' })
+    const { edits, request } = req.body ?? {}
+    if (!Array.isArray(edits) || !edits.length) return res.status(400).json({ error: 'edits[] required' })
+    const result = await commitEdits(edits, String(request || 'admin edit'), adminEmail(req))
+    await writeAudit(adminEmail(req), 'publish.commit', { request, branch: result.branch, pr: result.pr.number })
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Commit failed' })
+  }
+})
+
+// CI build-gate status for a PR head commit.
+app.get('/api/publish/checks', verifyAdmin, async (req, res) => {
+  try {
+    const ref = String(req.query.ref || '')
+    if (!ref) return res.status(400).json({ error: 'ref required' })
+    res.json(await getChecks(ref))
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to read checks' })
+  }
+})
+
+// Merge the PR into the deploy branch (only after CI is green — enforced in UI + re-checked here).
+app.post('/api/publish/merge', verifyAdmin, async (req, res) => {
+  try {
+    const { number, headSha } = req.body ?? {}
+    if (!number || !headSha) return res.status(400).json({ error: 'number and headSha required' })
+    const checks = await getChecks(String(headSha))
+    if (checks.state === 'failure') return res.status(409).json({ error: 'CI failed — cannot publish.' })
+    if (checks.state === 'pending') return res.status(409).json({ error: 'CI still running — try again shortly.' })
+    const result = await mergePR(Number(number), String(headSha))
+    await writeAudit(adminEmail(req), 'publish.merge', { pr: number, mergeSha: result.sha, rollbackTo: result.baseShaBefore })
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Merge failed' })
+  }
+})
+
+// Roll the deploy branch back to a prior state.
+app.post('/api/publish/rollback', verifyAdmin, async (req, res) => {
+  try {
+    const { oldSha, reason } = req.body ?? {}
+    if (!oldSha) return res.status(400).json({ error: 'oldSha required' })
+    const result = await rollbackTo(String(oldSha), String(reason || 'admin rollback'))
+    await writeAudit(adminEmail(req), 'publish.rollback', { to: oldSha, sha: result.sha })
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Rollback failed' })
+  }
+})
 
 // --- Static frontend ---
 app.use(express.static(distPath))

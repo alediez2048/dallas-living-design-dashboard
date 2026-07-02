@@ -235,12 +235,40 @@ function EditTab({
   const [proposal, setProposal] = useState<EditProposal | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const [ghConfigured, setGhConfigured] = useState(false)
+  const [pr, setPr] = useState<{ number: number; url: string; headSha: string; baseSha: string } | null>(null)
+  const [checks, setChecks] = useState<'none' | 'pending' | 'success' | 'failure' | null>(null)
+  const [publishing, setPublishing] = useState(false)
+  const [merged, setMerged] = useState(false)
+  const [rollbackSha, setRollbackSha] = useState<string | null>(null)
+  const [pubMsg, setPubMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await adminFetch('/api/publish/config')
+        if (res.ok) setGhConfigured((await res.json()).githubConfigured)
+      } catch {
+        /* ignore */
+      }
+    })()
+  }, [adminFetch])
+
+  const resetPublish = () => {
+    setPr(null)
+    setChecks(null)
+    setMerged(false)
+    setRollbackSha(null)
+    setPubMsg(null)
+  }
+
   const generate = async () => {
     const text = request.trim()
     if (!text || busy) return
     setBusy(true)
     setError(null)
     setProposal(null)
+    resetPublish()
     try {
       const res = await adminFetch('/api/edit', {
         method: 'POST',
@@ -257,11 +285,97 @@ function EditTab({
     }
   }
 
+  const createPR = async () => {
+    if (!proposal) return
+    setPublishing(true)
+    setPubMsg(null)
+    try {
+      const res = await adminFetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ edits: proposal.edits, request }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setPr({ number: data.pr.number, url: data.pr.url, headSha: data.pr.headSha, baseSha: data.baseSha })
+        setChecks('pending')
+      } else setPubMsg(data.error || 'Failed to create pull request')
+    } catch {
+      setPubMsg('Network error')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  // Poll the CI build-gate until it resolves.
+  useEffect(() => {
+    if (!pr || merged || checks === 'success' || checks === 'failure') return
+    let active = true
+    const tick = async () => {
+      try {
+        const res = await adminFetch(`/api/publish/checks?ref=${pr.headSha}`)
+        if (res.ok && active) setChecks((await res.json()).state)
+      } catch {
+        /* ignore */
+      }
+    }
+    const id = setInterval(tick, 5000)
+    void tick()
+    return () => {
+      active = false
+      clearInterval(id)
+    }
+  }, [pr, merged, checks, adminFetch])
+
+  const publish = async () => {
+    if (!pr) return
+    setPublishing(true)
+    setPubMsg(null)
+    try {
+      const res = await adminFetch('/api/publish/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number: pr.number, headSha: pr.headSha }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMerged(true)
+        setRollbackSha(data.baseShaBefore)
+        setPubMsg('Published ✓ — Railway is deploying the change to production.')
+      } else setPubMsg(data.error || 'Publish failed')
+    } catch {
+      setPubMsg('Network error')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  const rollback = async () => {
+    if (!rollbackSha) return
+    setPublishing(true)
+    setPubMsg(null)
+    try {
+      const res = await adminFetch('/api/publish/rollback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldSha: rollbackSha, reason: request }),
+      })
+      const data = await res.json()
+      setPubMsg(res.ok ? 'Rolled back ✓ — redeploying the previous version.' : data.error || 'Rollback failed')
+    } catch {
+      setPubMsg('Network error')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  const hasApplicable = !!proposal?.edits.some((e) => e.applied)
+
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
       <p className="text-xs text-gray-400">
-        Describe a change to the dashboard. The agent proposes the exact file edits for your review.
-        Publishing to production requires the GitHub connection (coming next).
+        Describe a change. The agent proposes exact edits; you review, then publish through a build-checked
+        pull request that deploys to production — with one-click rollback.
       </p>
       <textarea
         value={request}
@@ -318,13 +432,73 @@ function EditTab({
             ))
           )}
 
-          <button
-            disabled
-            title="Available once the GitHub connection is configured"
-            className="w-full py-2.5 rounded-lg bg-gray-200 dark:bg-white/10 text-gray-400 font-medium cursor-not-allowed"
-          >
-            Publish to production (needs GitHub setup)
-          </button>
+          {hasApplicable && (
+            <div className="space-y-2 pt-1 border-t border-gray-200 dark:border-white/10">
+              {!ghConfigured && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Connect Railway to GitHub to enable publishing.
+                </p>
+              )}
+              {ghConfigured && !pr && (
+                <button
+                  onClick={() => void createPR()}
+                  disabled={publishing}
+                  className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {publishing && <Loader2 size={16} className="animate-spin" />}
+                  Create pull request (runs build check)
+                </button>
+              )}
+              {pr && (
+                <div className="rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-3 space-y-2 text-xs">
+                  <a href={pr.url} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 underline">
+                    Pull request #{pr.number} ↗
+                  </a>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 dark:text-gray-400">Build check:</span>
+                    <span
+                      className={
+                        checks === 'success'
+                          ? 'text-emerald-500'
+                          : checks === 'failure'
+                            ? 'text-red-500'
+                            : checks === 'none'
+                              ? 'text-gray-400'
+                              : 'text-amber-500'
+                      }
+                    >
+                      {checks === 'success'
+                        ? 'passed ✓'
+                        : checks === 'failure'
+                          ? 'failed ✗'
+                          : checks === 'none'
+                            ? 'waiting for CI…'
+                            : 'running…'}
+                    </span>
+                  </div>
+                  {!merged && (
+                    <button
+                      onClick={() => void publish()}
+                      disabled={publishing || checks !== 'success'}
+                      className="w-full py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 disabled:opacity-40"
+                    >
+                      {checks === 'success' ? 'Publish to production' : 'Publish (waiting for build)'}
+                    </button>
+                  )}
+                  {merged && rollbackSha && (
+                    <button
+                      onClick={() => void rollback()}
+                      disabled={publishing}
+                      className="w-full py-2 rounded-lg border border-red-300 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      Roll back this change
+                    </button>
+                  )}
+                </div>
+              )}
+              {pubMsg && <p className="text-xs text-gray-600 dark:text-gray-300">{pubMsg}</p>}
+            </div>
+          )}
         </div>
       )}
     </div>

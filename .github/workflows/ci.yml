@@ -1,0 +1,21 @@
+name: CI
+
+# Build-gate for the admin AI editor: every agent PR (and any agent/** branch)
+# must compile (tsc) and build (vite) before it can be published to production.
+on:
+  pull_request:
+  push:
+    branches: ['agent/**']
+
+jobs:
+  build:
+    name: Typecheck & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
