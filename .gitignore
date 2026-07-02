@@ -1,4 +1,11 @@
 .DS_Store
 node_modules/
 dist/
+
+# Secrets & environment — never commit real values
 .env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
