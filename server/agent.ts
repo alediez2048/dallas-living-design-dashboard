@@ -1,17 +1,18 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { completeChat } from './llm'
+import { runToolLoop, type AgentTool, type ToolExecutor } from './llm'
 import { getLlmSettings, getDecryptedApiKey } from './db'
 
 /**
- * Code-editing agent (Phase 3 — proposal stage).
+ * Agentic code-editing agent (Phase 3).
  *
- * Turns a natural-language request into targeted search/replace edits, grounded
- * in the actual repo source. Uses content-grep to find the right file(s), then
- * asks the model for minimal find/replace snippets (never whole files — that
- * truncates on large files and is slow). This stage only PROPOSES; committing
- * to GitHub + deploying is the commit stage (needs GITHUB_TOKEN + connected repo).
+ * The model is given tools — list_files, grep, read_file, propose_edit — and
+ * runs a native tool-use loop: it searches for the relevant code, reads it,
+ * and proposes minimal search/replace edits, getting validation feedback on
+ * each one (find must exist and be unique). This is far more reliable than a
+ * single blind pass. It still only PROPOSES; the commit/PR/CI/publish safety
+ * net is what carries changes to production.
  *
  * Guardrail: may only touch files under src/ plus tailwind.config.js / index.html.
  */
@@ -47,16 +48,14 @@ function walk(dir: string, acc: string[] = []): string[] {
 function listSourceFiles(): string[] {
   const files: string[] = []
   walk(path.join(REPO_ROOT, 'src'), files)
-  for (const f of ALLOW_EXACT) {
-    if (fs.existsSync(path.join(REPO_ROOT, f))) files.push(f)
-  }
+  for (const f of ALLOW_EXACT) if (fs.existsSync(path.join(REPO_ROOT, f))) files.push(f)
   return files.sort()
 }
 
 function readSource(rel: string): string | null {
   if (!isEditablePath(rel)) return null
   const full = path.resolve(REPO_ROOT, rel)
-  if (!full.startsWith(REPO_ROOT)) return null // defense-in-depth against traversal
+  if (!full.startsWith(REPO_ROOT)) return null
   try {
     return fs.readFileSync(full, 'utf8')
   } catch {
@@ -64,59 +63,28 @@ function readSource(rel: string): string | null {
   }
 }
 
-/** Pull the first JSON object/array out of an LLM reply (handles ```json fences and prose). */
-function extractJson<T>(text: string): T {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/)
-  const candidate = fenced ? fenced[1] : text
-  const start = candidate.search(/[[{]/)
-  if (start === -1) throw new Error('No JSON found in model response')
-  const open = candidate[start]
-  const close = open === '[' ? ']' : '}'
-  let depth = 0
-  let inStr = false
-  let esc = false
-  for (let i = start; i < candidate.length; i++) {
-    const c = candidate[i]
-    if (esc) { esc = false; continue }
-    if (c === '\\') { esc = true; continue }
-    if (c === '"') { inStr = !inStr; continue }
-    if (inStr) continue
-    if (c === open) depth++
-    else if (c === close) {
-      depth--
-      if (depth === 0) return JSON.parse(candidate.slice(start, i + 1)) as T
-    }
-  }
-  throw new Error('Unbalanced JSON in model response')
-}
-
-/** Distinctive phrases from the request: quoted text + Capitalized Multi-Word runs + long words. */
-function extractSearchTerms(request: string): string[] {
-  const terms = new Set<string>()
-  for (const m of request.matchAll(/["'“”`]([^"'“”`]{3,})["'“”`]/g)) terms.add(m[1].trim())
-  for (const m of request.matchAll(/\b([A-Z][A-Za-z0-9]+(?:\s+[A-Z0-9][A-Za-z0-9]+){1,6})\b/g))
-    terms.add(m[1].trim())
-  for (const w of request.split(/\s+/)) {
-    const clean = w.replace(/[^A-Za-z0-9]/g, '')
-    if (clean.length >= 5) terms.add(clean)
-  }
-  return Array.from(terms)
-}
-
-/** Rank allow-listed files by how many request terms appear in their contents. */
-function findCandidateFiles(terms: string[], fileList: string[]): string[] {
-  if (terms.length === 0) return []
-  const scored: { path: string; score: number }[] = []
-  for (const p of fileList) {
+function grepRepo(query: string): string {
+  const q = query.trim().toLowerCase()
+  if (!q) return 'ERROR: query is required.'
+  const out: string[] = []
+  let fileCount = 0
+  for (const p of listSourceFiles()) {
     const content = readSource(p)
     if (!content) continue
-    const lc = content.toLowerCase()
-    let score = 0
-    for (const t of terms) if (lc.includes(t.toLowerCase())) score++
-    if (score > 0) scored.push({ path: p, score })
+    const lines = content.split('\n')
+    const hits: string[] = []
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].toLowerCase().includes(q)) {
+        hits.push(`  L${i + 1}: ${lines[i].trim().slice(0, 160)}`)
+        if (hits.length >= 6) break
+      }
+    }
+    if (hits.length) {
+      out.push(`FILE: ${p}\n${hits.join('\n')}`)
+      if (++fileCount >= 20) break
+    }
   }
-  scored.sort((a, b) => b.score - a.score)
-  return scored.slice(0, 6).map((s) => s.path)
+  return out.length ? out.join('\n\n') : `No matches for "${query}".`
 }
 
 export interface EditOp {
@@ -134,6 +102,57 @@ export interface EditProposal {
   contextFiles: string[]
 }
 
+const TOOLS: AgentTool[] = [
+  {
+    name: 'list_files',
+    description: 'List every editable source file in the project.',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'grep',
+    description: 'Search all source files for a literal string (case-insensitive). Returns matching files and lines. Use this first to locate visible text, components, or symbols.',
+    parameters: {
+      type: 'object',
+      properties: { query: { type: 'string', description: 'text to search for' } },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'read_file',
+    description: 'Read the full contents of one source file so you can copy exact snippets.',
+    parameters: {
+      type: 'object',
+      properties: { path: { type: 'string', description: 'repo-relative path, e.g. src/App.tsx' } },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'propose_edit',
+    description:
+      'Propose one search/replace edit. "find" MUST be an exact substring copied verbatim from the file, long enough to be unique. Returns OK, or an error to fix.',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: { type: 'string' },
+        find: { type: 'string' },
+        replace: { type: 'string' },
+      },
+      required: ['path', 'find', 'replace'],
+    },
+  },
+]
+
+const SYSTEM = [
+  'You are an expert code-editing agent for a Vite + React + TypeScript + Tailwind dashboard.',
+  'Goal: make the SMALLEST change that fully satisfies the user request. Preserve surrounding style.',
+  'Workflow: use `grep` to locate the relevant code/text, `read_file` to see exact context, then',
+  '`propose_edit` with a `find` snippet copied verbatim (include enough surrounding text to be unique)',
+  'and its `replace`. You may ONLY edit files under src/ (plus tailwind.config.js and index.html).',
+  'Check each propose_edit result: if it errors, read the file and fix your snippet — do not give up.',
+  'When every needed edit is recorded successfully, STOP calling tools and reply with a one-paragraph',
+  'summary of exactly what you changed and where.',
+].join('\n')
+
 async function llmConfig() {
   const settings = await getLlmSettings()
   const apiKey = await getDecryptedApiKey()
@@ -141,107 +160,61 @@ async function llmConfig() {
   return { provider: settings.provider, model: settings.model, apiKey }
 }
 
-/** LLM fallback file picker (only used when content-grep finds nothing). */
-async function selectFilesViaLlm(request: string, fileList: string[]): Promise<string[]> {
-  const cfg = await llmConfig()
-  const reply = await completeChat({
-    ...cfg,
-    system:
-      'You are a code-editing agent for a Vite + React + TypeScript dashboard. Given a change request and the ' +
-      'list of source files, return ONLY a JSON array of the file paths you must read (edit target + related). ' +
-      'At most 6. Return paths exactly as given.',
-    messages: [{ role: 'user', content: `Request:\n${request}\n\nFiles:\n${fileList.join('\n')}` }],
-  })
-  try {
-    return extractJson<string[]>(reply).filter((p) => fileList.includes(p)).slice(0, 6)
-  } catch {
-    return []
-  }
-}
-
 export async function proposeEdits(request: string): Promise<EditProposal> {
-  const fileList = listSourceFiles()
-  const terms = extractSearchTerms(request)
-  let contextFiles = findCandidateFiles(terms, fileList)
-  if (contextFiles.length === 0) contextFiles = await selectFilesViaLlm(request, fileList)
+  const cfg = await llmConfig()
+  const edits: EditOp[] = []
+  const visited = new Set<string>()
 
-  const files = contextFiles
-    .map((p) => ({ path: p, content: readSource(p) }))
-    .filter((f): f is { path: string; content: string } => f.content !== null)
+  const execute: ToolExecutor = async (name, args) => {
+    if (name === 'list_files') return listSourceFiles().join('\n')
 
-  if (files.length === 0) {
-    return {
-      summary: 'Could not locate a relevant file to edit.',
-      edits: [],
-      notes: ['No source file matched the request. Try naming the visible text or component.'],
-      contextFiles: [],
+    if (name === 'grep') return grepRepo(String(args.query ?? ''))
+
+    if (name === 'read_file') {
+      const p = String(args.path ?? '')
+      const content = readSource(p)
+      if (content === null) return `ERROR: cannot read "${p}" (not an editable file).`
+      visited.add(p)
+      return content.length > 60000 ? content.slice(0, 60000) + '\n... (truncated)' : content
     }
+
+    if (name === 'propose_edit') {
+      const p = String(args.path ?? '')
+      const find = String(args.find ?? '')
+      const replace = String(args.replace ?? '')
+      if (!isEditablePath(p)) return `ERROR: "${p}" is not editable (only src/ + tailwind.config.js/index.html).`
+      const content = readSource(p)
+      if (content === null) return `ERROR: cannot read "${p}".`
+      if (find === '') return 'ERROR: "find" must not be empty.'
+      const count = content.split(find).length - 1
+      if (count === 0) return `ERROR: "find" not found in ${p}. read_file and copy an exact snippet.`
+      if (count > 1) return `ERROR: "find" appears ${count}× in ${p}; add more surrounding context to make it unique.`
+      const op: EditOp = { path: p, find, replace, applied: true }
+      const existing = edits.findIndex((e) => e.path === p && e.find === find)
+      if (existing >= 0) edits[existing] = op
+      else edits.push(op)
+      return `OK: recorded edit to ${p}.`
+    }
+
+    return `ERROR: unknown tool "${name}".`
   }
 
-  const cfg = await llmConfig()
-  const filesBlock = files.map((f) => `--- FILE: ${f.path} ---\n${f.content}`).join('\n\n')
-
-  const reply = await completeChat({
+  const summary = await runToolLoop({
     ...cfg,
-    system: [
-      'You are a careful code-editing agent for a Vite + React + TypeScript + Tailwind dashboard.',
-      'Make the smallest change that fully satisfies the request. Preserve surrounding style and imports.',
-      'You may ONLY edit files under src/ (plus tailwind.config.js and index.html).',
-      'Return ONLY a JSON object of this exact shape:',
-      '{"summary": string, "edits": [{"path": string, "find": string, "replace": string}], "notes": string[]}',
-      'Each edit is a search/replace. "find" MUST be an exact substring copied verbatim from the given file,',
-      'long enough to be unique (include surrounding context). "replace" is the new text. Do NOT output whole',
-      'files — only the minimal snippets that change. If nothing needs changing, return an empty edits array.',
-    ].join('\n'),
-    messages: [{ role: 'user', content: `Request:\n${request}\n\nCurrent files:\n\n${filesBlock}` }],
+    system: SYSTEM,
+    userMessage: request,
+    tools: TOOLS,
+    execute,
+    maxSteps: 16,
   })
 
-  const parsed = extractJson<{
-    summary: string
-    edits: { path: string; find: string; replace: string }[]
-    notes?: string[]
-  }>(reply)
-
-  const notes = [...(parsed.notes || [])]
-  const edits: EditOp[] = []
-  for (const e of parsed.edits || []) {
-    if (!e || typeof e.find !== 'string' || typeof e.replace !== 'string') continue
-    if (!isEditablePath(e.path)) {
-      notes.push(`Rejected out-of-bounds edit: ${e.path}`)
-      continue
-    }
-    const content = readSource(e.path) ?? ''
-    const count = content.split(e.find).length - 1
-    edits.push({
-      path: e.path,
-      find: e.find,
-      replace: e.replace,
-      applied: count === 1,
-      note:
-        count === 0
-          ? 'find text not found in file — skipped'
-          : count > 1
-            ? `find text appears ${count}× (not unique) — skipped`
-            : undefined,
-    })
-  }
+  const notes: string[] = []
+  if (edits.length === 0) notes.push('The agent finished without recording any applicable edits.')
 
   return {
-    summary: parsed.summary || '(no summary)',
+    summary: summary.trim() || '(no summary provided)',
     edits,
     notes,
-    contextFiles: files.map((f) => f.path),
+    contextFiles: Array.from(visited),
   }
-}
-
-/** Apply an approved proposal's edits to produce the new file contents (used by the commit stage). */
-export function applyEdits(edits: EditOp[]): { path: string; newContent: string }[] {
-  const byPath = new Map<string, string>()
-  for (const e of edits) {
-    if (!e.applied || !isEditablePath(e.path)) continue
-    const current = byPath.get(e.path) ?? readSource(e.path) ?? ''
-    if (!current.includes(e.find)) continue
-    byPath.set(e.path, current.replace(e.find, e.replace))
-  }
-  return Array.from(byPath.entries()).map(([path, newContent]) => ({ path, newContent }))
 }
