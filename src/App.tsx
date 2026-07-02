@@ -163,7 +163,7 @@ const DashboardContent = () => {
             {isProjectsExpanded ? <ChevronDown className="w-6 h-6 text-gray-400 dark:text-gray-500" /> : <ChevronRight className="w-6 h-6 text-gray-400 dark:text-gray-500" />}
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
               <span className="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
-              DFW Projects Overview
+              Dallas Fort Worth Project Overviews
             </h3>
           </button>
           <motion.div
