@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useClerk, useUser } from '@clerk/clerk-react'
 import { Lock, ShieldCheck, X, LogOut, KeyRound } from 'lucide-react'
 import { useAdmin } from '../context/AdminContext'
+import { AdminPanel } from './AdminPanel'
 
 /**
  * Fixed admin control (bottom-left). Public users never need it; it drives the
@@ -14,6 +15,7 @@ export function AdminGate() {
   const { status, unlock, loading } = useAdmin()
 
   const [open, setOpen] = useState(false)
+  const [panelOpen, setPanelOpen] = useState(false)
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -23,6 +25,8 @@ export function AdminGate() {
   const handleTrigger = () => {
     if (!isSignedIn) {
       openSignIn()
+    } else if (status.isAdmin) {
+      setPanelOpen(true)
     } else {
       setError(null)
       setOpen(true)
@@ -38,6 +42,7 @@ export function AdminGate() {
     if (result.ok) {
       setCode('')
       setOpen(false)
+      setPanelOpen(true)
     } else {
       setError(result.error ?? 'Invalid code')
     }
@@ -145,6 +150,8 @@ export function AdminGate() {
           </div>
         </div>
       )}
+
+      {status.isAdmin && <AdminPanel open={panelOpen} onClose={() => setPanelOpen(false)} />}
     </>
   )
 }

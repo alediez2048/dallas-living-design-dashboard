@@ -1,4 +1,4 @@
-import { DataProvider, useData } from './context/DataContext'
+import { useData } from './context/DataContext'
 import { FileUploader } from './components/FileUploader'
 import { DashboardLayout } from './components/DashboardLayout'
 import { PetalRadar } from './components/PetalRadar'
@@ -613,11 +613,9 @@ import { ThemeProvider } from './context/ThemeContext'
 
 function App() {
   return (
-    <DataProvider>
-      <ThemeProvider>
-        <DashboardContent />
-      </ThemeProvider>
-    </DataProvider>
+    <ThemeProvider>
+      <DashboardContent />
+    </ThemeProvider>
   )
 }
 

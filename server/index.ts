@@ -3,7 +3,8 @@ import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { clerkMiddleware } from '@clerk/express'
-import { adminStatus, adminUnlock } from './auth'
+import { adminStatus, adminUnlock, verifyAdmin } from './auth'
+import { getSettings, postSettings, chat } from './chat'
 
 /**
  * Dallas Living Design Dashboard — backend service (Railway).
@@ -38,8 +39,12 @@ app.get('/api/health', (_req, res) => {
 app.get('/api/admin/status', adminStatus)
 app.post('/api/admin/unlock', adminUnlock)
 
-// TODO (Phase 2+): /api/chat, /api/edit, /api/publish, /api/keys, /api/audit
-// all guarded by verifyAdmin().
+// --- Admin AI chat + settings (Phase 2) — all gated by verifyAdmin ---
+app.get('/api/admin/settings', verifyAdmin, getSettings)
+app.post('/api/admin/settings', verifyAdmin, postSettings)
+app.post('/api/chat', verifyAdmin, chat)
+
+// TODO (Phase 3): /api/edit, /api/publish, /api/audit
 
 // --- Static frontend ---
 app.use(express.static(distPath))
