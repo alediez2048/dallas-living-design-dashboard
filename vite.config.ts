@@ -2,11 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
-  base: '/dallas-living-design-dashboard/',
+  // Use the GitHub Pages subpath only for production builds; serve at root in dev.
+  base: command === 'build' ? '/dallas-living-design-dashboard/' : '/',
   server: {
     port: 3000,
+    // Bind all interfaces (IPv4 127.0.0.1 + IPv6) so `localhost` always connects.
+    host: true,
     open: true
   },
   build: {
@@ -21,4 +24,4 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 600,
   },
-})
+}))
