@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   plugins: [react()],
-  // Use the GitHub Pages subpath only for production builds; serve at root in dev.
-  base: command === 'build' ? '/dallas-living-design-dashboard/' : '/',
+  // Railway serves the app at the domain root (not the old GitHub Pages subpath).
+  base: '/',
   server: {
     port: 3000,
     // Bind all interfaces (IPv4 127.0.0.1 + IPv6) so `localhost` always connects.
@@ -24,4 +24,4 @@ export default defineConfig(({ command }) => ({
     },
     chunkSizeWarningLimit: 600,
   },
-}))
+})
