@@ -211,9 +211,16 @@ function ChatTab({
   )
 }
 
+interface EditOp {
+  path: string
+  find: string
+  replace: string
+  applied: boolean
+  note?: string
+}
 interface EditProposal {
   summary: string
-  edits: { path: string; oldContent: string; newContent: string }[]
+  edits: EditOp[]
   notes: string[]
   contextFiles: string[]
 }
@@ -290,14 +297,23 @@ function EditTab({
           {proposal.edits.length === 0 ? (
             <p className="text-xs text-gray-400">No file edits were proposed.</p>
           ) : (
-            proposal.edits.map((e) => (
-              <details key={e.path} className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
-                <summary className="cursor-pointer px-3 py-2 text-xs font-mono bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300">
-                  {e.path}
+            proposal.edits.map((e, i) => (
+              <details key={i} open className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                <summary className="cursor-pointer px-3 py-2 text-xs bg-gray-50 dark:bg-white/5 flex items-center justify-between gap-2">
+                  <span className="font-mono text-gray-700 dark:text-gray-300 truncate">{e.path}</span>
+                  <span className={e.applied ? 'text-emerald-500' : 'text-amber-500'}>
+                    {e.applied ? '✓' : '⚠'}
+                  </span>
                 </summary>
-                <pre className="max-h-64 overflow-auto text-[11px] leading-snug p-3 bg-white dark:bg-[#111] text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                  {e.newContent}
-                </pre>
+                <div className="p-2 space-y-1.5 text-[11px] leading-snug">
+                  {e.note && <p className="text-amber-600 dark:text-amber-400 px-1">{e.note}</p>}
+                  <pre className="max-h-40 overflow-auto p-2 rounded bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300 whitespace-pre-wrap">
+                    {e.find}
+                  </pre>
+                  <pre className="max-h-40 overflow-auto p-2 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 whitespace-pre-wrap">
+                    {e.replace}
+                  </pre>
+                </div>
               </details>
             ))
           )}
