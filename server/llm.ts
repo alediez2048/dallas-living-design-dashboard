@@ -21,6 +21,13 @@ export interface StreamChatInput {
   messages: ChatMessage[]
 }
 
+/** Non-streaming: accumulate the whole reply (uses streaming under the hood to avoid timeouts). */
+export async function completeChat(input: StreamChatInput): Promise<string> {
+  let out = ''
+  for await (const chunk of streamChat(input)) out += chunk
+  return out
+}
+
 export async function* streamChat(input: StreamChatInput): AsyncGenerator<string> {
   if (input.provider === 'anthropic') {
     const client = new Anthropic({ apiKey: input.apiKey })

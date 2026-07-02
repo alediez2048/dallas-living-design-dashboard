@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Send, Settings as SettingsIcon, MessageSquare, Loader2, LogOut } from 'lucide-react'
+import { X, Send, Settings as SettingsIcon, MessageSquare, Loader2, LogOut, Wand2 } from 'lucide-react'
 import { useClerk } from '@clerk/clerk-react'
 import { useAdmin } from '../context/AdminContext'
 import { useData } from '../context/DataContext'
@@ -39,7 +39,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const { adminFetch } = useAdmin()
   const { projects } = useData()
   const { signOut } = useClerk()
-  const [tab, setTab] = useState<'chat' | 'settings'>('chat')
+  const [tab, setTab] = useState<'chat' | 'edit' | 'settings'>('chat')
 
   return (
     <div
@@ -61,6 +61,16 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
             <MessageSquare size={15} /> Chat
           </button>
           <button
+            onClick={() => setTab('edit')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
+              tab === 'edit'
+                ? 'bg-emerald-600 text-white'
+                : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
+            }`}
+          >
+            <Wand2 size={15} /> Edit
+          </button>
+          <button
             onClick={() => setTab('settings')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
               tab === 'settings'
@@ -76,11 +86,9 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         </button>
       </div>
 
-      {tab === 'chat' ? (
-        <ChatTab adminFetch={adminFetch} dataSummary={buildDataSummary(projects)} />
-      ) : (
-        <SettingsTab adminFetch={adminFetch} />
-      )}
+      {tab === 'chat' && <ChatTab adminFetch={adminFetch} dataSummary={buildDataSummary(projects)} />}
+      {tab === 'edit' && <EditTab adminFetch={adminFetch} />}
+      {tab === 'settings' && <SettingsTab adminFetch={adminFetch} />}
 
       <button
         onClick={() => void signOut()}
@@ -200,6 +208,110 @@ function ChatTab({
         </button>
       </div>
     </>
+  )
+}
+
+interface EditProposal {
+  summary: string
+  edits: { path: string; oldContent: string; newContent: string }[]
+  notes: string[]
+  contextFiles: string[]
+}
+
+function EditTab({
+  adminFetch,
+}: {
+  adminFetch: (path: string, init?: RequestInit) => Promise<Response>
+}) {
+  const [request, setRequest] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [proposal, setProposal] = useState<EditProposal | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const generate = async () => {
+    const text = request.trim()
+    if (!text || busy) return
+    setBusy(true)
+    setError(null)
+    setProposal(null)
+    try {
+      const res = await adminFetch('/api/edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request: text }),
+      })
+      const data = await res.json()
+      if (res.ok) setProposal(data)
+      else setError(data.error || 'Edit generation failed')
+    } catch {
+      setError('Network error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
+      <p className="text-xs text-gray-400">
+        Describe a change to the dashboard. The agent proposes the exact file edits for your review.
+        Publishing to production requires the GitHub connection (coming next).
+      </p>
+      <textarea
+        value={request}
+        onChange={(e) => setRequest(e.target.value)}
+        rows={3}
+        placeholder="e.g. Change the Total Projects card accent color to teal"
+        className="w-full resize-none rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      />
+      <button
+        onClick={() => void generate()}
+        disabled={busy || !request.trim()}
+        className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {busy ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+        {busy ? 'Generating…' : 'Propose changes'}
+      </button>
+
+      {error && <p className="text-red-600 dark:text-red-400">{error}</p>}
+
+      {proposal && (
+        <div className="space-y-3 pt-2">
+          <div className="rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-3">
+            <p className="font-medium text-gray-800 dark:text-gray-200">{proposal.summary}</p>
+            {proposal.notes.length > 0 && (
+              <ul className="mt-2 list-disc pl-4 text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+                {proposal.notes.map((n, i) => (
+                  <li key={i}>{n}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {proposal.edits.length === 0 ? (
+            <p className="text-xs text-gray-400">No file edits were proposed.</p>
+          ) : (
+            proposal.edits.map((e) => (
+              <details key={e.path} className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                <summary className="cursor-pointer px-3 py-2 text-xs font-mono bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300">
+                  {e.path}
+                </summary>
+                <pre className="max-h-64 overflow-auto text-[11px] leading-snug p-3 bg-white dark:bg-[#111] text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                  {e.newContent}
+                </pre>
+              </details>
+            ))
+          )}
+
+          <button
+            disabled
+            title="Available once the GitHub connection is configured"
+            className="w-full py-2.5 rounded-lg bg-gray-200 dark:bg-white/10 text-gray-400 font-medium cursor-not-allowed"
+          >
+            Publish to production (needs GitHub setup)
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 

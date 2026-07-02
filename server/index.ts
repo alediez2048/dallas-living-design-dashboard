@@ -5,6 +5,9 @@ import { fileURLToPath } from 'node:url'
 import { clerkMiddleware } from '@clerk/express'
 import { adminStatus, adminUnlock, verifyAdmin } from './auth'
 import { getSettings, postSettings, chat } from './chat'
+import { proposeEdits } from './agent'
+import { writeAudit } from './db'
+import type { Request } from 'express'
 
 /**
  * Dallas Living Design Dashboard — backend service (Railway).
@@ -44,7 +47,22 @@ app.get('/api/admin/settings', verifyAdmin, getSettings)
 app.post('/api/admin/settings', verifyAdmin, postSettings)
 app.post('/api/chat', verifyAdmin, chat)
 
-// TODO (Phase 3): /api/edit, /api/publish, /api/audit
+// --- Code-editing agent (Phase 3, proposal stage) ---
+app.post('/api/edit', verifyAdmin, async (req, res) => {
+  try {
+    const request = String(req.body?.request || '').trim()
+    if (!request) return res.status(400).json({ error: 'request is required' })
+    const proposal = await proposeEdits(request)
+    const email = (req as Request & { adminEmail?: string }).adminEmail
+    await writeAudit(email, 'edit.propose', { request, files: proposal.edits.map((e) => e.path) })
+    res.json(proposal)
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Edit generation failed' })
+  }
+})
+
+// TODO (Phase 3 commit stage — needs GITHUB_TOKEN + GitHub-connected Railway):
+// /api/publish (commit branch -> PR -> merge -> deploy), /api/audit, rollback
 
 // --- Static frontend ---
 app.use(express.static(distPath))
