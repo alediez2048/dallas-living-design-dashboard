@@ -4,6 +4,8 @@
 
 A premium, interactive dashboard for visualizing and tracking Perkins&Will Dallas Studio's Living Design project metrics. This application parses Excel spreadsheets containing project data and displays comprehensive visualizations of sustainability and wellness metrics across different sectors.
 
+> 📖 **How the numbers are calculated:** See **[dashboard_logic_guide.md](./dashboard_logic_guide.md)** — the source of truth for how spreadsheets are parsed and how every metric, sector, and goal is computed.
+
 ## Features
 
 - 📊 **Interactive Petal Radar Chart**: Visualize 7+6 sub-categories of Living Design metrics
@@ -55,6 +57,8 @@ The built files will be in the `dist/` directory, ready for deployment.
 ## Excel File Structure Requirements
 
 The dashboard expects Excel files (`.xlsx` or `.xls`) with a specific structure. Follow these guidelines to ensure proper parsing:
+
+> For the exact parsing rules and metric formulas (column detection, sector normalization, eligibility, goal calculations), see **[dashboard_logic_guide.md](./dashboard_logic_guide.md)**.
 
 ### Header Structure
 
